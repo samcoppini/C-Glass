@@ -36,6 +36,9 @@ size_t string_len(const String *str);
 // Returns a pointer to the string's content
 const char *string_data(const String *str);
 
+// Returns a pointer to a null-terminated string from the string's content
+const char *string_get_c_str(String *str);
+
 // Returns the character at a given index in the string
 char string_get(const String *str, size_t index);
 

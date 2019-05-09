@@ -13,15 +13,18 @@ int main() {
 
     string_add_chars(str, "Howdy!");
     ASSERT_EQUAL(string_len(str), 7);
-    ASSERT_FALSE(strcmp(string_data(str), "XHowdy!"));
+    ASSERT_FALSE(memcmp(string_data(str), "XHowdy!", 7));
 
     String *str2 = string_from_chars("0123456789abcdef");
     ASSERT_EQUAL(string_len(str2), 16);
-    ASSERT_FALSE(strcmp(string_data(str2), "0123456789abcdef"));
+    ASSERT_FALSE(memcmp(string_data(str2), "0123456789abcdef", 16));
 
     string_add_str(str, str2);
     ASSERT_EQUAL(string_len(str), 23);
-    ASSERT_FALSE(strcmp(string_data(str), "XHowdy!0123456789abcdef"));
+    ASSERT_FALSE(memcmp(string_data(str), "XHowdy!0123456789abcdef", 23));
+
+    ASSERT_EQUAL(strlen(string_get_c_str(str)), 23);
+    ASSERT_FALSE(strcmp(string_get_c_str(str), "XHowdy!0123456789abcdef"));
 
     free_string(str);
     free_string(str2);

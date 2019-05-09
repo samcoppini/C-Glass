@@ -85,6 +85,12 @@ const char *string_data(const String *str) {
     return str->buf;
 }
 
+const char *string_get_c_str(String *str) {
+    string_reserve_space(str, str->len + 1);
+    str->buf[str->len] = '\0';
+    return str->buf;
+}
+
 char string_get(const String *str, size_t index) {
     return str->buf[index];
 }

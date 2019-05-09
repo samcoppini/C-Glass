@@ -3,4 +3,4 @@ project('c-glass', 'c',
   default_options : ['warning_level=3']
 )
 
-subdir('libs')
+subdir('c')
