@@ -1,5 +1,5 @@
-#include "utils/string.h"
 #include "test/test.h"
+#include "utils/string.h"
 
 #include <string.h>
 

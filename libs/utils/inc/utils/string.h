@@ -1,15 +1,22 @@
 #ifndef UTILS_STRING_H
 #define UTILS_STRING_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
 typedef struct String String;
+struct CopyInterface;
+
+const struct CopyInterface *STRING_COPY_OPS;
 
 // Returns a pointer to a newly-allocated, empty string
 String *new_string(void);
 
 // Returns a pointer to a newly-allocated string with the given content
 String *string_from_chars(const char *chars);
+
+// Returns a copy of the given string
+String *copy_string(const String *str);
 
 // Frees the memory associated with a string
 void free_string(String *str);

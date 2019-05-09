@@ -1,6 +1,7 @@
 utils_inc = include_directories('inc')
 
 utils_src = files(
+    'src/list.c',
     'src/string.c',
 )
 

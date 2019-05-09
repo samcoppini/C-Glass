@@ -1,4 +1,5 @@
 test_files = [
+    ['list',   'list-test.c'],
     ['string', 'string-test.c'],
 ]
 

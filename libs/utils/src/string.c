@@ -1,4 +1,5 @@
 #include "utils/string.h"
+#include "utils/copy-interface.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -31,6 +32,15 @@ String *string_from_chars(const char *chars) {
     str->buf = malloc(sizeof(char) * str->alloc);
     memcpy(str->buf, chars, str->len);
     return str;
+}
+
+String *copy_string(const String *str) {
+    String *copy = malloc(sizeof(String));
+    copy->buf = malloc(sizeof(char) * str->alloc);
+    copy->len = str->len;
+    copy->alloc = str->alloc;
+    memcpy(copy->buf, str->buf, copy->alloc);
+    return copy;
 }
 
 void free_string(String *str) {
@@ -78,3 +88,18 @@ const char *string_data(const String *str) {
 char string_get(const String *str, size_t index) {
     return str->buf[index];
 }
+
+// "Generic" versions of some functions that are used to satisfy interfaces
+
+static void *copy_string_generic(const void *str) {
+    return copy_string(str);
+}
+
+static void free_string_generic(void *str) {
+    free_string(str);
+}
+
+const CopyInterface *STRING_COPY_OPS = & (CopyInterface) {
+    copy_string_generic,
+    free_string_generic,
+};
