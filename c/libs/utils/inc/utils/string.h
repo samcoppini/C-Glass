@@ -6,8 +6,10 @@
 
 typedef struct String String;
 struct CopyInterface;
+struct HashInterface;
 
 const struct CopyInterface *STRING_COPY_OPS;
+const struct HashInterface *STRING_HASH_OPS;
 
 // Returns a pointer to a newly-allocated, empty string
 String *new_string(void);
@@ -29,6 +31,12 @@ void string_add_chars(String *str, const char *chars);
 
 // Adds the content of the string to the end of another string
 void string_add_str(String *str1, const String *str2);
+
+// Returns a hash for the string
+size_t hash_string(const String *str);
+
+// Returns whether two strings are equal to each other
+bool strings_equal(const String *str1, const String *str2);
 
 // Returns the length of the string
 size_t string_len(const String *str);

@@ -1,5 +1,6 @@
 test_files = [
-    ['list',   'list-test.c'],
+    ['list',   'list-test.c'  ],
+    ['map',    'map-test.c'   ],
     ['string', 'string-test.c'],
 ]
 

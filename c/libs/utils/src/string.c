@@ -77,6 +77,21 @@ void string_add_str(String *str1, const String *str2) {
     str1->len += str2->len;
 }
 
+size_t hash_string(const String *str) {
+    size_t hash = 5381;
+    for (size_t i = 0; i < str->len; i++) {
+        hash = (hash * 33) + str->buf[i];
+    }
+    return hash;
+}
+
+bool strings_equal(const String *str1, const String *str2) {
+    if (str1->len != str2->len) {
+        return false;
+    }
+    return memcmp(str1->buf, str2->buf, str1->len) == 0;
+}
+
 size_t string_len(const String *str) {
     return str->len;
 }
@@ -103,6 +118,14 @@ static void *copy_string_generic(const void *str) {
 
 static void free_string_generic(void *str) {
     free_string(str);
+}
+
+static size_t hash_string_generic(const void *str) {
+
+}
+
+static bool strings_equal_generic(const void *str1, const void *str2) {
+
 }
 
 const CopyInterface *STRING_COPY_OPS = & (CopyInterface) {
