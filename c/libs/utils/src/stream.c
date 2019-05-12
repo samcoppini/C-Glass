@@ -46,7 +46,7 @@ bool stream_ended(const Stream *stream) {
 }
 
 char stream_get_char(Stream *stream) {
-    if (stream_ended) {
+    if (stream_ended(stream)) {
         return 0;
     }
     else {

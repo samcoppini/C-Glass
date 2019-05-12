@@ -29,6 +29,14 @@ int main() {
         ASSERT_FALSE(strcmp(string_data(str), TEST_STRINGS[i]));
     }
 
+    String *str = list_pop(list);
+    String *cmp = string_from_chars("Yargh");
+
+    ASSERT_EQUAL(list_len(list), 5);
+    ASSERT_TRUE(strings_equal(str, cmp));
+
+    free_string(str);
+    free_string(cmp);
     free_list(list);
 
     return test_status();

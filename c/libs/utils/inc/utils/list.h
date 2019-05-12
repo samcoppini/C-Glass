@@ -1,6 +1,7 @@
 #ifndef UTILS_LIST_H
 #define UTILS_LIST_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
 typedef struct List List;
@@ -16,7 +17,11 @@ void free_list(List *list);
 
 void list_add(List *list, const void *val);
 
+void *list_pop(List *list);
+
 size_t list_len(const List *list);
+
+bool list_empty(const List *list);
 
 const void *list_get(const List *list, size_t index);
 

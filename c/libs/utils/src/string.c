@@ -1,5 +1,6 @@
 #include "utils/string.h"
 #include "utils/copy-interface.h"
+#include "utils/hash-interface.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -121,14 +122,21 @@ static void free_string_generic(void *str) {
 }
 
 static size_t hash_string_generic(const void *str) {
-
+    return hash_string(str);
 }
 
 static bool strings_equal_generic(const void *str1, const void *str2) {
-
+    return strings_equal(str1, str2);
 }
 
 const CopyInterface *STRING_COPY_OPS = & (CopyInterface) {
     copy_string_generic,
     free_string_generic,
+};
+
+const HashInterface *STRING_HASH_OPS = & (HashInterface) {
+    copy_string_generic,
+    free_string_generic,
+    hash_string_generic,
+    strings_equal_generic,
 };

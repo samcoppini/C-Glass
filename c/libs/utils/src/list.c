@@ -60,8 +60,17 @@ void list_add(List *list, const void *val) {
     list->len++;
 }
 
+void *list_pop(List *list) {
+    list->len--;
+    return list->elements[list->len];
+}
+
 size_t list_len(const List *list) {
     return list->len;
+}
+
+bool list_empty(const List *list) {
+    return list->len == 0;
 }
 
 const void *list_get(const List *list, size_t index) {

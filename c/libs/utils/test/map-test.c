@@ -6,27 +6,23 @@
 
 #include <stdlib.h>
 
-void *copy_int(const void *val) {
+static void *copy_int(const void *val) {
     int *copy = malloc(sizeof(int));
     *copy = * (int *) val;
     return copy;
 }
 
-void free_int(void *val) {
+static void free_int(void *val) {
     free(val);
 }
 
-size_t hash_int(const void *val) {
+static size_t hash_int(const void *val) {
     return *(int *) val;
 }
 
-bool ints_equal(const void *val1, const void *val2) {
+static bool ints_equal(const void *val1, const void *val2) {
     return *(int *) val1 == *(int *) val2;
 }
-
-const CopyInterface *INT_COPY_OPS = &(CopyInterface) {
-    copy_int, free_int,
-};
 
 const HashInterface *INT_HASH_OPS = &(HashInterface) {
     copy_int, free_int, hash_int, ints_equal,
