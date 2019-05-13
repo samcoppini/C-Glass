@@ -38,6 +38,16 @@ int main() {
         free_map(classes);
     }
 
+    classes = get_classes("{(M)[(m)]}");
+    if (ASSERT_NOT_NULL(classes)) {
+        ASSERT_EQUAL(map_size(classes), 1);
+        if (ASSERT_TRUE(map_has(classes, capital_m))) {
+            const GlassClass *gclass = map_get(classes, capital_m);
+            ASSERT_TRUE(class_has_func(gclass, lower_m));
+        }
+        free_map(classes);
+    }
+
     free_string(capital_m);
     free_string(lower_m);
 
