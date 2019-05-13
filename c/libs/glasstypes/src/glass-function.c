@@ -35,8 +35,8 @@ GlassFunction *build_glass_function(const GlassFuncBuilder *builder) {
     }
 
     GlassFunction *func = malloc(sizeof(GlassFunction));
-    func->name = copy_string(func->name);
-    func->cmds = copy_list(func->cmds);
+    func->name = copy_string(builder->name);
+    func->cmds = copy_list(builder->cmds);
     return func;
 }
 
@@ -91,3 +91,16 @@ bool builder_end_loop(GlassFuncBuilder *builder) {
     free(index);
     return false;
 }
+
+static void *copy_glass_func_generic(const void *func) {
+    return copy_glass_func(func);
+}
+
+static void free_glass_func_generic(void *func) {
+    free_glass_func(func);
+}
+
+const CopyInterface *FUNC_COPY_OPS = &(CopyInterface) {
+    copy_glass_func_generic,
+    free_glass_func_generic,
+};

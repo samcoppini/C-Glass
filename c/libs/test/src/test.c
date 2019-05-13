@@ -5,7 +5,7 @@
 static int total_tests = 0;
 static int tests_passed = 0;
 
-void _assert(bool x, const char *filename, int line) {
+bool _assert(bool x, const char *filename, int line) {
     if (!x) {
         fprintf(stderr, "Test failed in %s on line %d.\n", filename, line);
     }
@@ -13,6 +13,7 @@ void _assert(bool x, const char *filename, int line) {
     if (x) {
         tests_passed++;
     }
+    return x;
 }
 
 int test_status() {

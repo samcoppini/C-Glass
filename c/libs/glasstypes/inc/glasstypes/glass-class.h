@@ -8,7 +8,7 @@ struct CopyInterface;
 struct GlassFunction;
 struct String;
 
-extern struct CopyInterface *CLASS_COPY_OPS;
+extern const struct CopyInterface *CLASS_COPY_OPS;
 
 GlassClass *copy_glass_class(const GlassClass *gclass);
 

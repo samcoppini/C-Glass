@@ -53,3 +53,9 @@ char stream_get_char(Stream *stream) {
         return stream->chars[stream->cur_index++];
     }
 }
+
+void stream_unget(Stream *stream) {
+    if (stream->cur_index > 0) {
+        stream->cur_index--;
+    } 
+}

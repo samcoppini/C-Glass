@@ -22,7 +22,7 @@ struct GlassClass *build_glass_class(const GlassClassBuilder *builder);
 
 struct GlassFunction *build_glass_function(const GlassFuncBuilder *builder);
 
-void builder_add_func(GlassClassBuilder *builder, const struct GlassFunction *func);
+bool builder_add_func(GlassClassBuilder *builder, const struct GlassFunction *func);
 
 void builder_add_command(GlassFuncBuilder *builder, const struct GlassCommand *cmd);
 

@@ -17,4 +17,6 @@ bool stream_ended(const Stream *stream);
 
 char stream_get_char(Stream *stream);
 
+void stream_unget(Stream *stream);
+
 #endif
