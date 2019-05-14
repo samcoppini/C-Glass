@@ -118,7 +118,10 @@ int main() {
     ASSERT_NULL(get_classes("!$^*"));
     ASSERT_NULL(get_classes("{M !}"));
     ASSERT_NULL(get_classes("{M[m & ]}"));
+    ASSERT_NULL(get_classes("{M[m(a]}"));
+    ASSERT_NULL(get_classes("{M[m<2]}"));
     ASSERT_NULL(get_classes("{M[m/]}"));
+    ASSERT_NULL(get_classes("{M[m/(_name]}"));
     ASSERT_NULL(get_classes("{M[m/(_name)]}"));
     ASSERT_NULL(get_classes("{M[m\\]}"));
 
