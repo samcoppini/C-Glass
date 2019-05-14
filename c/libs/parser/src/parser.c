@@ -163,7 +163,7 @@ static GlassFunction *parse_function(Stream *stream) {
     skip_whitespace(stream);
     c = stream_get_char(stream);
     while (!stream_ended(stream) && c != ']') {
-        GlassCommand cmd;
+        GlassCommand cmd = { .type = CMD_NOP };
 
         switch (c) {
             case '.':
@@ -204,6 +204,20 @@ static GlassFunction *parse_function(Stream *stream) {
                     return NULL;
                 }
                 break;
+            case '/':
+                name = parse_name(stream);
+                if (name == NULL) {
+                    free_func_builder(builder);
+                    return NULL;
+                }
+                builder_start_loop(builder, name);
+                free_string(name);
+                break;
+            case '\\':
+                if (builder_end_loop(builder)) {
+                    return NULL;
+                }
+                break;
             default:
                 if (is_alpha(c)) {
                     cmd.type = CMD_PUSH_NAME;
@@ -220,11 +234,11 @@ static GlassFunction *parse_function(Stream *stream) {
                 break;
         }
 
-        builder_add_command(builder, &cmd);
+        if (cmd.type != CMD_NOP) {
+            builder_add_command(builder, &cmd);
+        }
 
-        if (cmd.type == CMD_PUSH_NAME  || cmd.type == CMD_PUSH_STR ||
-            cmd.type == CMD_LOOP_BEGIN || cmd.type == CMD_LOOP_END)
-        {
+        if (cmd.type == CMD_PUSH_NAME  || cmd.type == CMD_PUSH_STR) {
             free_string(cmd.str);
         }
 

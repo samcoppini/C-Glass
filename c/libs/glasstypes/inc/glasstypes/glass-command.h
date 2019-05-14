@@ -23,6 +23,7 @@ typedef enum CommandType {
     CMD_RETURN,       // ^
 
     CMD_BUILTIN,
+    CMD_NOP,
 } CommandType;
 
 typedef enum BuiltinFunc {

@@ -60,7 +60,7 @@ int main() {
         free_map(classes);
     }
 
-    classes = get_classes("{M[m.?!*^mM3(_name)(42)\"_name\"]}");
+    classes = get_classes("{M[m.?!*^mM3(_name)(42)\"_name\"/(m)/M\\\\]}");
     if (ASSERT_NOT_NULL(classes)) {
         ASSERT_EQUAL(map_size(classes), 1);
         if (ASSERT_TRUE(map_has(classes, capital_m))) {
@@ -84,6 +84,18 @@ int main() {
                 ASSERT_EQUAL(func_get_command(func, 9)->index, 42);
                 ASSERT_EQUAL(func_get_command(func, 10)->type, CMD_PUSH_STR);
                 ASSERT_TRUE(strings_equal(func_get_command(func, 10)->str, under_name));
+                ASSERT_EQUAL(func_get_command(func, 11)->type, CMD_LOOP_BEGIN);
+                ASSERT_EQUAL(func_get_command(func, 11)->index, 14);
+                ASSERT_TRUE(strings_equal(func_get_command(func, 11)->str, lower_m));
+                ASSERT_EQUAL(func_get_command(func, 12)->type, CMD_LOOP_BEGIN);
+                ASSERT_EQUAL(func_get_command(func, 12)->index, 13);
+                ASSERT_TRUE(strings_equal(func_get_command(func, 12)->str, capital_m));
+                ASSERT_EQUAL(func_get_command(func, 13)->type, CMD_LOOP_END);
+                ASSERT_EQUAL(func_get_command(func, 13)->index, 12);
+                ASSERT_TRUE(strings_equal(func_get_command(func, 13)->str, capital_m));
+                ASSERT_EQUAL(func_get_command(func, 14)->type, CMD_LOOP_END);
+                ASSERT_EQUAL(func_get_command(func, 14)->index, 11);
+                ASSERT_TRUE(strings_equal(func_get_command(func, 14)->str, lower_m));
             }
         }
     }

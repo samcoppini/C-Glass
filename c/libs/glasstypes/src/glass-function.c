@@ -86,7 +86,7 @@ bool builder_end_loop(GlassFuncBuilder *builder) {
     size_t *index = list_pop(builder->loop_starts);
     GlassCommand *loop_start = list_get_mutable(builder->cmds, *index);
     loop_start->index = list_len(builder->cmds);
-    GlassCommand loop_end = { CMD_LOOP_END, .str = loop_start->str };
+    GlassCommand loop_end = { CMD_LOOP_END, .str = loop_start->str, .index = *index };
     list_add(builder->cmds, &loop_end);
     free(index);
     return false;
