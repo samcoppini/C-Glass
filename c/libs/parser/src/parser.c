@@ -1,13 +1,26 @@
 #include "parser/parser.h"
 #include "glasstypes/glass-builders.h"
 #include "glasstypes/glass-class.h"
+#include "glasstypes/glass-command.h"
 #include "glasstypes/glass-function.h"
 #include "utils/map.h"
 #include "utils/stream.h"
 #include "utils/string.h"
 
 #include <assert.h>
-#include <ctype.h>
+//#include <ctype.h>
+
+bool is_alpha(char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+
+bool is_digit(char c) {
+    return c >= '0' && c <= '9';
+}
+
+bool is_space(char c) {
+    return c == ' ' || c == '\n' || c == '\r' || c == '\t' || c == '\f';
+}
 
 static bool skip_whitespace(Stream *stream) {
     while (!stream_ended(stream)) {
@@ -19,7 +32,7 @@ static bool skip_whitespace(Stream *stream) {
                 c = stream_get_char(stream);
             } while (c != '\'' && !stream_ended(stream));
         }
-        else if (!isspace(c)) {
+        else if (!is_space(c)) {
             stream_unget(stream);
             return true;
         }
@@ -29,9 +42,10 @@ static bool skip_whitespace(Stream *stream) {
 }
 
 static String *parse_name(Stream *stream) {
+    skip_whitespace(stream);
     char c = stream_get_char(stream);
 
-    if (isalpha(c)) {
+    if (is_alpha(c)) {
         String *name = new_string();
         string_add_char(name, c);
         return name;
@@ -54,6 +68,57 @@ static String *parse_name(Stream *stream) {
     }
 }
 
+bool parse_parenthesized(Stream *stream, GlassCommand *cmd) {
+    char c = stream_get_char(stream);
+
+    assert(c == '(');
+
+    c = stream_get_char(stream);
+
+    if (is_alpha(c) || c == '_') {
+        cmd->type = CMD_PUSH_NAME;
+        cmd->str = string_from_char(c);
+
+        c = stream_get_char(stream);
+        while (c != ')' && !stream_ended(stream)) {
+            if (!is_alpha(c) && c != '_') {
+                return true;
+            }
+            string_add_char(cmd->str, c);
+            c = stream_get_char(stream);
+        }
+
+        if (c != ')') {
+            free_string(cmd->str);
+            return true;
+        }
+
+        return false;
+    }
+    else if (is_digit(c)) {
+        cmd->type = CMD_DUPLICATE;
+        cmd->index = c - '0';
+        c = stream_get_char(stream);
+
+        while (c != ')' && !stream_ended(stream)) {
+            if (!is_digit(c)) {
+                return true;
+            }
+            cmd->index = (cmd->index * 10) + c - '0';
+            c = stream_get_char(stream);
+        }
+
+        if (c != ')') {
+            return true;
+        }
+
+        return false;
+    }
+    else {
+        return true;
+    }
+}
+
 static GlassFunction *parse_function(Stream *stream) {
     char c = stream_get_char(stream);
     assert(c == '[');
@@ -69,6 +134,61 @@ static GlassFunction *parse_function(Stream *stream) {
     skip_whitespace(stream);
     c = stream_get_char(stream);
     while (!stream_ended(stream) && c != ']') {
+        GlassCommand cmd;
+
+        switch (c) {
+            case '.':
+                cmd.type = CMD_GET_FUNC;
+                break;
+            case '?':
+                cmd.type = CMD_EXECUTE_FUNC;
+                break;
+            case '^':
+                cmd.type = CMD_RETURN;
+                break;
+            case '!':
+                cmd.type = CMD_NEW_INST;
+                break;
+            case ',':
+                cmd.type = CMD_POP_STACK;
+                break;
+            case '*':
+                cmd.type = CMD_GET_VAL;
+                break;
+            case '$':
+                cmd.type = CMD_ASSIGN_SELF;
+                break;
+            case '=':
+                cmd.type = CMD_ASSIGN_VAL;
+                break;
+            case '(':
+                stream_unget(stream);
+                parse_parenthesized(stream, &cmd);
+                break;
+            default:
+                if (is_alpha(c)) {
+                    cmd.type = CMD_PUSH_NAME;
+                    cmd.str = string_from_char(c);
+                }
+                else if (is_digit(c)) {
+                    cmd.type = CMD_DUPLICATE;
+                    cmd.index = c - '0';
+                }
+                else {
+                    free_func_builder(builder);
+                    return NULL;
+                }
+                break;
+        }
+
+        builder_add_command(builder, &cmd);
+
+        if (cmd.type == CMD_PUSH_NAME  || cmd.type == CMD_PUSH_STR ||
+            cmd.type == CMD_LOOP_BEGIN || cmd.type == CMD_LOOP_END)
+        {
+            free_string(cmd.str);
+        }
+
         skip_whitespace(stream);
         c = stream_get_char(stream);
     }

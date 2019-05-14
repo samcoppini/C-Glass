@@ -23,6 +23,15 @@ String *new_string(void) {
     return str;
 }
 
+String *string_from_char(char c) {
+    String *str = malloc(sizeof(String));
+    str->buf = malloc(sizeof(char) * STR_INIT_ALLOC);
+    str->buf[0] = c;
+    str->len = 1;
+    str->alloc = STR_INIT_ALLOC;
+    return str;
+}
+
 String *string_from_chars(const char *chars) {
     String *str = malloc(sizeof(String));
     str->len = strlen(chars);

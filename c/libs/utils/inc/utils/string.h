@@ -14,6 +14,9 @@ const struct HashInterface *STRING_HASH_OPS;
 // Returns a pointer to a newly-allocated, empty string
 String *new_string(void);
 
+// Returns a pointer to a newly-allocated string with the character
+String *string_from_char(char c);
+
 // Returns a pointer to a newly-allocated string with the given content
 String *string_from_chars(const char *chars);
 
