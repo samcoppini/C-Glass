@@ -68,7 +68,7 @@ static String *parse_name(Stream *stream) {
     }
 }
 
-bool parse_parenthesized(Stream *stream, GlassCommand *cmd) {
+static bool parse_parenthesized(Stream *stream, GlassCommand *cmd) {
     char c = stream_get_char(stream);
 
     assert(c == '(');
@@ -119,6 +119,35 @@ bool parse_parenthesized(Stream *stream, GlassCommand *cmd) {
     }
 }
 
+static bool parse_quoted(Stream *stream, GlassCommand *cmd) {
+    char c = stream_get_char(stream);
+
+    assert(c == '"');
+
+    cmd->type = CMD_PUSH_STR;
+    cmd->str = new_string();
+
+    c = stream_get_char(stream);
+    while (c != '"' && !stream_ended(stream)) {
+        if (c == '\\') {
+            switch (c) {
+                case 'n': c = '\n'; break;
+                case 't': c = '\t'; break;
+                case 'r': c = '\r'; break;
+                default: break;
+            }
+        }
+        string_add_char(cmd->str, c);
+        c = stream_get_char(stream);
+    }
+
+    if (c != '"') {
+        return true;
+    }
+
+    return false;
+}
+
 static GlassFunction *parse_function(Stream *stream) {
     char c = stream_get_char(stream);
     assert(c == '[');
@@ -163,7 +192,17 @@ static GlassFunction *parse_function(Stream *stream) {
                 break;
             case '(':
                 stream_unget(stream);
-                parse_parenthesized(stream, &cmd);
+                if (parse_parenthesized(stream, &cmd)) {
+                    free_func_builder(builder);
+                    return NULL;
+                }
+                break;
+            case '"':
+                stream_unget(stream);
+                if (parse_quoted(stream, &cmd)) {
+                    free_func_builder(builder);
+                    return NULL;
+                }
                 break;
             default:
                 if (is_alpha(c)) {
