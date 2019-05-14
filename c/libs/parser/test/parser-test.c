@@ -60,7 +60,7 @@ int main() {
         free_map(classes);
     }
 
-    classes = get_classes("{M[m.?!*^mM3(_name)(42)\"_name\"/(m)/M\\\\$]}");
+    classes = get_classes("{M[m.?!*^mM3(_name)(42)\"_name\"/(m)/M\\\\$<100>]}");
     if (ASSERT_NOT_NULL(classes)) {
         ASSERT_EQUAL(map_size(classes), 1);
         if (ASSERT_TRUE(map_has(classes, capital_m))) {
@@ -97,6 +97,8 @@ int main() {
                 ASSERT_EQUAL(func_get_command(func, 14)->index, 11);
                 ASSERT_TRUE(strings_equal(func_get_command(func, 14)->str, lower_m));
                 ASSERT_EQUAL(func_get_command(func, 15)->type, CMD_ASSIGN_SELF);
+                ASSERT_EQUAL(func_get_command(func, 16)->type, CMD_PUSH_NUM);
+                ASSERT_EQUAL(func_get_command(func, 16)->number, 100);
             }
         }
     }

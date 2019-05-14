@@ -8,6 +8,7 @@
 #include "utils/string.h"
 
 #include <assert.h>
+#include <math.h>
 //#include <ctype.h>
 
 bool is_alpha(char c) {
@@ -148,6 +149,31 @@ static bool parse_quoted(Stream *stream, GlassCommand *cmd) {
     return false;
 }
 
+static bool parse_angled(Stream *stream, GlassCommand *cmd) {
+    char c = stream_get_char(stream);
+
+    assert(c == '<');
+
+    String *num_str = new_string();
+    cmd->type = CMD_PUSH_NUM;
+    
+    c = stream_get_char(stream);
+    while (c != '>' && !stream_ended(stream)) {
+        string_add_char(num_str, c);
+        c = stream_get_char(stream);
+    }
+
+    if (c != '>') {
+        free_string(num_str);
+        return true;
+    }
+
+    cmd->number = atof(string_get_c_str(num_str));
+    free_string(num_str);
+
+    return false;
+}
+
 static GlassFunction *parse_function(Stream *stream) {
     char c = stream_get_char(stream);
     assert(c == '[');
@@ -200,6 +226,13 @@ static GlassFunction *parse_function(Stream *stream) {
             case '"':
                 stream_unget(stream);
                 if (parse_quoted(stream, &cmd)) {
+                    free_func_builder(builder);
+                    return NULL;
+                }
+                break;
+            case '<':
+                stream_unget(stream);
+                if (parse_angled(stream, &cmd)) {
                     free_func_builder(builder);
                     return NULL;
                 }

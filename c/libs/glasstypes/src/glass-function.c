@@ -25,7 +25,7 @@ GlassFuncBuilder *new_func_builder(const String *name) {
     GlassFuncBuilder *builder = malloc(sizeof(GlassFuncBuilder));
     builder->name = copy_string(name);
     builder->cmds = new_list(CMD_COPY_OPS);
-    builder->loop_starts = new_list(INT_COPY_OPS);
+    builder->loop_starts = new_list(SIZE_T_COPY_OPS);
     return builder;
 }
 
