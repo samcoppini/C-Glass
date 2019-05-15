@@ -1,6 +1,7 @@
 glasstypes_inc = include_directories('inc')
 
 glasstypes_src = files(
+    'src/builtins.c',
     'src/glass-class.c',
     'src/glass-command.c',
     'src/glass-function.c',

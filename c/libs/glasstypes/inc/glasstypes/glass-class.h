@@ -6,9 +6,12 @@
 typedef struct GlassClass GlassClass;
 struct CopyInterface;
 struct GlassFunction;
+struct Map;
 struct String;
 
 extern const struct CopyInterface *CLASS_COPY_OPS;
+
+struct Map *get_builtin_classes(void);
 
 GlassClass *copy_glass_class(const GlassClass *gclass);
 
