@@ -1,5 +1,9 @@
+#include "glasstypes/glass-class.h"
+#include "parser/parser.h"
 #include "utils/list.h"
+#include "utils/map.h"
 #include "utils/string.h"
+#include "utils/stream.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -29,23 +33,10 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    String *all_code = new_string();
-    for (size_t i = 0; i < list_len(opts.files); i++) {
-        String *filename = list_get_mutable(opts.files, i);
-        FILE *fp = fopen(string_get_c_str(filename), "r");
-        if (fp == NULL) {
-            fprintf(stderr, "Error! Unable to open '%s'\n",
-                    string_get_c_str(filename));
-            return 1;
-        }
-
-        int c;
-        while ((c = fgetc(fp)) != EOF) {
-            string_add_char(all_code, c);
-        }
+    Map *classes = classes_from_files(opts.files, true);
+    if (classes == NULL) {
+        return 1;
     }
-
-    puts(string_get_c_str(all_code));
 
     return 0;
 }

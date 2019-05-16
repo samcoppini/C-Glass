@@ -1,6 +1,7 @@
 #include "utils/map.h"
 #include "utils/copy-interface.h"
 #include "utils/hash-interface.h"
+#include "utils/list.h"
 
 #include <stdlib.h>
 
@@ -118,6 +119,20 @@ void map_set(Map *map, const void *key, const void *val) {
 bool map_has(const Map *map, const void *key) {
     size_t slot = map_get_slot(map, key);
     return map->keys[slot] != NULL;
+}
+
+List *map_get_keys(const Map *map) {
+    CopyInterface key_copy_ops = {
+        map->key_ops.copy_val,
+        map->key_ops.free_val,
+    };
+    List *keys = new_list(&key_copy_ops);
+    for (size_t i = 0; i < map->alloc; i++) {
+        if (map->keys[i] != NULL) {
+            list_add(keys, map->keys[i]);
+        }
+    }
+    return keys;
 }
 
 const void *map_get(const Map *map, const void *key) {

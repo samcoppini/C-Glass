@@ -7,6 +7,7 @@
 typedef struct Map Map;
 struct CopyInterface;
 struct HashInterface;
+struct List;
 
 Map *new_map(const struct HashInterface *key_ops,
              const struct CopyInterface *val_ops);
@@ -18,6 +19,8 @@ void free_map(Map *map);
 void map_set(Map *map, const void *key, const void *val);
 
 bool map_has(const Map *map, const void *key);
+
+struct List *map_get_keys(const Map *map);
 
 const void *map_get(const Map *map, const void *key);
 

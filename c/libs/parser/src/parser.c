@@ -3,6 +3,7 @@
 #include "glasstypes/glass-class.h"
 #include "glasstypes/glass-command.h"
 #include "glasstypes/glass-function.h"
+#include "utils/list.h"
 #include "utils/map.h"
 #include "utils/stream.h"
 #include "utils/string.h"
@@ -10,6 +11,7 @@
 #include <assert.h>
 #include <math.h>
 //#include <ctype.h>
+#include <stdio.h>
 
 bool is_alpha(char c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
@@ -353,6 +355,62 @@ Map *parse_classes(Stream *stream) {
             free_map(classes);
             return NULL;
         }
+    }
+
+    return classes;
+}
+
+Map *classes_from_files(List *filenames, bool include_builtins) {
+    Map *classes;
+
+    if (include_builtins) {
+        classes = get_builtin_classes();
+    }
+    else {
+        classes = new_map(STRING_HASH_OPS, CLASS_COPY_OPS);
+    }
+
+    for (size_t i = 0; i < list_len(filenames); i++) {
+        String *str = list_get_mutable(filenames, i);
+        FILE *fp = fopen(string_get_c_str(str), "r");
+        free_string(str);
+
+        if (fp == NULL) {
+            fprintf(stderr, "Unable to open %s!\n", string_get_c_str(str));
+            free_map(classes);
+            return NULL;
+        }
+
+        Stream *file_stream = stream_from_file(fp);
+        fclose(fp);
+
+        Map *new_classes = parse_classes(file_stream);
+        free_stream(file_stream);
+
+        if (new_classes == NULL) {
+            free_map(classes);
+            return NULL;
+        }
+
+        List *class_names = map_get_keys(new_classes);
+        for (size_t i = 0; i < list_len(class_names); i++) {
+            String *cname = list_get_mutable(class_names, i);
+
+            if (map_has(classes, cname)) {
+                fprintf(stderr, "Error! %s defined multiple times!\n", 
+                        string_get_c_str(cname));
+                free_list(class_names);
+                free_map(new_classes);
+                free_map(classes);
+                return NULL;
+            }
+
+            const GlassClass *gclass = map_get(new_classes, cname);
+            map_set(classes, cname, gclass);
+        }
+
+        free_list(class_names);
+        free_map(new_classes);
     }
 
     return classes;

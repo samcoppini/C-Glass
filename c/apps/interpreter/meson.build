@@ -7,6 +7,6 @@ interpreter_src = files(
 interpreter = executable(
     'cglass',
     interpreter_src,
-    dependencies: [utils_dep],
+    dependencies: [glasstypes_dep, parser_dep, utils_dep],
     install: true,
 )
