@@ -1,3 +1,4 @@
+#include "interpreter/interpreter.h"
 #include "glasstypes/glass-class.h"
 #include "parser/parser.h"
 #include "utils/list.h"
@@ -26,6 +27,10 @@ bool parse_command_line(Options *opts, int argc, char **argv) {
     return false;
 }
 
+void free_options(Options *opts) {
+    free_list(opts->files);
+}
+
 int main(int argc, char **argv) {
     Options opts;
 
@@ -38,5 +43,9 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    return 0;
+    int ret_code = run_interpreter(classes);
+    free_options(&opts);
+    free_map(classes);
+
+    return ret_code;
 }
