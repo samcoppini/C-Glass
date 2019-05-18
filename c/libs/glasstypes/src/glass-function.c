@@ -68,6 +68,10 @@ const GlassCommand *func_get_command(const GlassFunction *func, size_t index) {
     return list_get(func->cmds, index);
 }
 
+size_t func_len(const GlassFunction *func) {
+    return list_len(func->cmds);
+}
+
 void builder_add_command(GlassFuncBuilder *builder, const GlassCommand *cmd) {
     list_add(builder->cmds, cmd);
 }

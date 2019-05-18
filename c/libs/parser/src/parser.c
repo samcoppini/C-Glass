@@ -10,20 +10,8 @@
 
 #include <assert.h>
 #include <math.h>
-//#include <ctype.h>
+#include <ctype.h>
 #include <stdio.h>
-
-bool is_alpha(char c) {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
-
-bool is_digit(char c) {
-    return c >= '0' && c <= '9';
-}
-
-bool is_space(char c) {
-    return c == ' ' || c == '\n' || c == '\r' || c == '\t' || c == '\f';
-}
 
 static bool skip_whitespace(Stream *stream) {
     while (!stream_ended(stream)) {
@@ -35,7 +23,7 @@ static bool skip_whitespace(Stream *stream) {
                 c = stream_get_char(stream);
             } while (c != '\'' && !stream_ended(stream));
         }
-        else if (!is_space(c)) {
+        else if (!isspace(c)) {
             stream_unget(stream);
             return true;
         }
@@ -48,7 +36,7 @@ static String *parse_name(Stream *stream) {
     skip_whitespace(stream);
     char c = stream_get_char(stream);
 
-    if (is_alpha(c)) {
+    if (isalpha(c)) {
         String *name = new_string();
         string_add_char(name, c);
         return name;
@@ -78,13 +66,13 @@ static bool parse_parenthesized(Stream *stream, GlassCommand *cmd) {
 
     c = stream_get_char(stream);
 
-    if (is_alpha(c) || c == '_') {
+    if (isalpha(c) || c == '_') {
         cmd->type = CMD_PUSH_NAME;
         cmd->str = string_from_char(c);
 
         c = stream_get_char(stream);
         while (c != ')' && !stream_ended(stream)) {
-            if (!is_alpha(c) && c != '_') {
+            if (!isalnum(c) && c != '_') {
                 return true;
             }
             string_add_char(cmd->str, c);
@@ -98,13 +86,13 @@ static bool parse_parenthesized(Stream *stream, GlassCommand *cmd) {
 
         return false;
     }
-    else if (is_digit(c)) {
+    else if (isdigit(c)) {
         cmd->type = CMD_DUPLICATE;
         cmd->index = c - '0';
         c = stream_get_char(stream);
 
         while (c != ')' && !stream_ended(stream)) {
-            if (!is_digit(c)) {
+            if (!isdigit(c)) {
                 return true;
             }
             cmd->index = (cmd->index * 10) + c - '0';
@@ -133,6 +121,11 @@ static bool parse_quoted(Stream *stream, GlassCommand *cmd) {
     c = stream_get_char(stream);
     while (c != '"' && !stream_ended(stream)) {
         if (c == '\\') {
+            if (stream_ended(stream)) {
+                free_string(cmd->str);
+                return true;
+            }
+            c = stream_get_char(stream);
             switch (c) {
                 case 'n': c = '\n'; break;
                 case 't': c = '\t'; break;
@@ -145,6 +138,7 @@ static bool parse_quoted(Stream *stream, GlassCommand *cmd) {
     }
 
     if (c != '"') {
+        free_string(cmd->str);
         return true;
     }
 
@@ -254,11 +248,11 @@ static GlassFunction *parse_function(Stream *stream) {
                 }
                 break;
             default:
-                if (is_alpha(c)) {
+                if (isalpha(c)) {
                     cmd.type = CMD_PUSH_NAME;
                     cmd.str = string_from_char(c);
                 }
-                else if (is_digit(c)) {
+                else if (isdigit(c)) {
                     cmd.type = CMD_DUPLICATE;
                     cmd.index = c - '0';
                 }

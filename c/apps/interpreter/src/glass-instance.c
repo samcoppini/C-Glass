@@ -2,6 +2,7 @@
 #include "interpreter/glass-value.h"
 
 #include "glasstypes/glass-class.h"
+#include "glasstypes/glass-function.h"
 #include "utils/map.h"
 #include "utils/string.h"
 
@@ -20,14 +21,22 @@ GlassInstance *new_glass_instance(const GlassClass *gclass) {
     return inst;
 }
 
-bool glass_has_var(const GlassInstance *inst, const String *name) {
+bool instance_has_var(const GlassInstance *inst, const String *name) {
     return map_has(inst->vars, name);
 }
 
-const GlassValue *glass_get_var(const GlassInstance *inst, const String *name) {
+bool instance_has_func(const GlassInstance *inst, const String *name) {
+    return class_has_func(inst->gclass, name);
+}
+
+const GlassFunction *instance_get_func(const GlassInstance *inst, const String *name) {
+    return class_get_func(inst->gclass, name);
+}
+
+const GlassValue *instance_get_var(const GlassInstance *inst, const String *name) {
     return map_get(inst->vars, name);
 }
 
-void glass_set_var(GlassInstance *inst, const String *name, const GlassValue *val) {
+void instance_set_var(GlassInstance *inst, const String *name, const GlassValue *val) {
     map_set(inst->vars, name, val);
 }

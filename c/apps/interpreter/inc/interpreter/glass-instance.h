@@ -5,15 +5,20 @@
 
 typedef struct GlassInstance GlassInstance;
 struct GlassClass;
+struct GlassFunction;
 struct GlassValue;
 struct String;
 
 GlassInstance *new_glass_instance(const struct GlassClass *gclass);
 
-bool glass_has_var(const GlassInstance *inst, const struct String *name);
+bool instance_has_var(const GlassInstance *inst, const struct String *name);
 
-const struct GlassValue *glass_get_var(const GlassInstance *inst, const struct String *name);
+bool instance_has_func(const GlassInstance *inst, const struct String *name);
 
-void glass_set_var(GlassInstance *inst, const struct String *name, const struct GlassValue *val);
+const struct GlassFunction *instance_get_func(const GlassInstance *inst, const struct String *name);
+
+const struct GlassValue *instance_get_var(const GlassInstance *inst, const struct String *name);
+
+void instance_set_var(GlassInstance *inst, const struct String *name, const struct GlassValue *val);
 
 #endif

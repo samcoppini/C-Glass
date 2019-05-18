@@ -18,4 +18,6 @@ const struct String *func_get_name(const GlassFunction *func);
 
 const struct GlassCommand *func_get_command(const GlassFunction *func, size_t index);
 
+size_t func_len(const GlassFunction *func);
+
 #endif

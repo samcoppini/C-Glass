@@ -137,6 +137,9 @@ List *map_get_keys(const Map *map) {
 
 const void *map_get(const Map *map, const void *key) {
     size_t slot = map_get_slot(map, key);
+    if (map->keys[slot] == NULL) {
+        return NULL;
+    }
     return map->vals[slot];
 }
 
