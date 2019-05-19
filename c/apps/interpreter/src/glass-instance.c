@@ -37,6 +37,10 @@ const GlassValue *instance_get_var(const GlassInstance *inst, const String *name
     return map_get(inst->vars, name);
 }
 
+const GlassClass *instance_get_class(const GlassInstance *inst) {
+    return inst->gclass;
+}
+
 void instance_set_var(GlassInstance *inst, const String *name, const GlassValue *val) {
     map_set(inst->vars, name, val);
 }

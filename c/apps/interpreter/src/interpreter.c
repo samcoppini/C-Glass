@@ -11,13 +11,37 @@
 
 #include <math.h>
 #include <ctype.h>
+#include <stdarg.h>
 #include <stdio.h>
+
+#define MAX_OP_ARGS 5
 
 typedef enum VarScope {
     SCOPE_LOCAL,
     SCOPE_CLASS,
     SCOPE_GLOBAL,
 } VarScope;
+
+typedef enum ArgType {
+    ARG_ANY,
+    ARG_FUNC,
+    ARG_INST,
+    ARG_NAME,
+    ARG_NUM,
+    ARG_STR,
+} ArgType;
+
+const char *arg_name_str(ArgType type) {
+    switch (type) {
+        case ARG_ANY:  return "any";
+        case ARG_FUNC: return "function";
+        case ARG_INST: return "instance";
+        case ARG_NAME: return "name";
+        case ARG_NUM:  return "number";
+        case ARG_STR:  return "string";
+        default:       return "unknown";
+    }
+}
 
 VarScope get_var_scope(const String *str) {
     char c = string_get(str, 0);
@@ -32,19 +56,79 @@ VarScope get_var_scope(const String *str) {
     }
 }
 
+bool check_stack(const List *stack, const char *op_name, size_t size, ...) {
+    if (list_len(stack) < size) {
+        fprintf(stderr, "Error! %s requires %u elements on the stack, but the stack only has %u elements!\n",
+                op_name, size, list_len(stack));
+        return true;
+    }
+
+    va_list ap;
+    ArgType types[MAX_OP_ARGS];
+
+    va_start(ap, size);
+    for (size_t i = 0; i < size; i++) {
+        types[i] = va_arg(ap, ArgType);
+    }
+    va_end(ap);
+    
+    bool types_matched = true;
+    for (size_t i = 0; i < size; i++) {
+        const GlassValue *val = list_get(stack, list_len(stack) - size + i);
+        switch (types[i]) {
+            case ARG_ANY:
+                break;
+
+            case ARG_FUNC:
+                types_matched &= (val->type == VALUE_FUNCTION);
+                break;
+            
+            case ARG_INST:
+                types_matched &= (val->type == VALUE_INSTANCE);
+                break;
+
+            case ARG_NAME:
+                types_matched &= (val->type == VALUE_NAME);
+                break;
+            
+            case ARG_NUM:
+                types_matched &= (val->type == VALUE_NUMBER);
+                break;
+
+            case ARG_STR:
+                types_matched &= (val->type == VALUE_STRING);
+                break;
+        }
+    }
+
+    if (!types_matched) {
+        fprintf(stderr, "Wrong arguments given for %s operation!\n", op_name);
+        fprintf(stderr, "Expected:");
+        for (size_t i = 0; i < size; i++) {
+            fprintf(stderr, " %s", arg_name_str(types[i]));
+        }
+        fprintf(stderr, "\nReceived:");
+        for (size_t i = 0; i < size; i++) {
+            const GlassValue *val = list_get(stack, list_len(stack) - size + i);
+            String *str = value_get_string(val);
+            fprintf(stderr, " %s", string_get_c_str(str));
+            free_string(str);
+        }
+        fprintf(stderr, "\n");
+        return true;
+    }
+
+    return false;
+}
+
 int execute_builtin(BuiltinFunc func, List *stack) {
     switch (func) {
         case BUILTIN_MATH_ADD: {
-            if (list_len(stack) < 2) {
-                fprintf(stderr, "Error! Not enough arguments on the stack for A.a!\n");
+            if (check_stack(stack, "A.a", 1, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val1 = list_pop(stack);
             GlassValue *val2 = list_pop(stack);
-            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
-                fprintf(stderr, "Error! Cannot add non-numbers!\n");
-                return 1;
-            }
             val1->num += val2->num;
             list_add(stack, val1);
             free_glass_value(val1);
@@ -53,16 +137,11 @@ int execute_builtin(BuiltinFunc func, List *stack) {
         }
 
         case BUILTIN_MATH_DIVIDE: {
-            if (list_len(stack) < 2) {
-                fprintf(stderr, "Error! Not enough arguments on the stack for A.d!\n");
+            if (check_stack(stack, "A.d", 1, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val1 = list_pop(stack);
             GlassValue *val2 = list_pop(stack);
-            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
-                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
-                return 1;
-            }
             val1->num = val2->num / val1->num;
             list_add(stack, val1);
             free_glass_value(val1);
@@ -71,16 +150,11 @@ int execute_builtin(BuiltinFunc func, List *stack) {
         }
 
         case BUILTIN_MATH_EQUAL: {
-            if (list_len(stack) < 2) {
-                fprintf(stderr, "Error! Not enough arguments on the stack for A.e!\n");
+            if (check_stack(stack, "A.e", 1, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val1 = list_pop(stack);
             GlassValue *val2 = list_pop(stack);
-            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
-                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
-                return 1;
-            }
             val1->num = (val2->num == val1->num ? 1.0 : 0.0);
             list_add(stack, val1);
             free_glass_value(val1);
@@ -89,15 +163,10 @@ int execute_builtin(BuiltinFunc func, List *stack) {
         }
 
         case BUILTIN_MATH_FLOOR: {
-            if (list_len(stack) == 0) {
-                fprintf(stderr, "Error! Not enough arguments on the stack for A.f!\n");
+            if (check_stack(stack, "A.f", 1, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val = list_pop(stack);
-            if (val->type != VALUE_NUMBER) {
-                fprintf(stderr, "Error! Cannot floor non-number!\n");
-                return 1;
-            }
             val->num = floor(val->num);
             list_add(stack, val);
             free_glass_value(val);
@@ -105,16 +174,11 @@ int execute_builtin(BuiltinFunc func, List *stack) {
         }
 
         case BUILTIN_MATH_GREATER_THAN: {
-            if (list_len(stack) < 2) {
-                fprintf(stderr, "Error! Not enough arguments on the stack for A.gt!\n");
+            if (check_stack(stack, "A.gt", 2, ARG_NUM, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val1 = list_pop(stack);
             GlassValue *val2 = list_pop(stack);
-            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
-                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
-                return 1;
-            }
             val1->num = (val2->num > val1->num ? 1.0 : 0.0);
             list_add(stack, val1);
             free_glass_value(val1);
@@ -123,16 +187,11 @@ int execute_builtin(BuiltinFunc func, List *stack) {
         }
 
         case BUILTIN_MATH_GREATER_OR_EQUAL: {
-            if (list_len(stack) < 2) {
-                fprintf(stderr, "Error! Not enough arguments on the stack for A.ge!\n");
+            if (check_stack(stack, "A.ge", 2, ARG_NUM, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val1 = list_pop(stack);
             GlassValue *val2 = list_pop(stack);
-            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
-                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
-                return 1;
-            }
             val1->num = (val2->num >= val1->num ? 1.0 : 0.0);
             list_add(stack, val1);
             free_glass_value(val1);
@@ -141,16 +200,11 @@ int execute_builtin(BuiltinFunc func, List *stack) {
         }
 
         case BUILTIN_MATH_LESS_OR_EQUAL: {
-            if (list_len(stack) < 2) {
-                fprintf(stderr, "Error! Not enough arguments on the stack for A.le!\n");
+            if (check_stack(stack, "A.le", 2, ARG_NUM, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val1 = list_pop(stack);
             GlassValue *val2 = list_pop(stack);
-            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
-                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
-                return 1;
-            }
             val1->num = (val2->num <= val1->num ? 1.0 : 0.0);
             list_add(stack, val1);
             free_glass_value(val1);
@@ -159,16 +213,11 @@ int execute_builtin(BuiltinFunc func, List *stack) {
         }
         
         case BUILTIN_MATH_LESS_THAN: {
-            if (list_len(stack) < 2) {
-                fprintf(stderr, "Error! Not enough arguments on the stack for A.lt!\n");
+            if (check_stack(stack, "A.lt", 2, ARG_NUM, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val1 = list_pop(stack);
             GlassValue *val2 = list_pop(stack);
-            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
-                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
-                return 1;
-            }
             val1->num = (val2->num < val1->num ? 1.0 : 0.0);
             list_add(stack, val1);
             free_glass_value(val1);
@@ -177,16 +226,11 @@ int execute_builtin(BuiltinFunc func, List *stack) {
         }
 
         case BUILTIN_MATH_MODULO: {
-            if (list_len(stack) < 2) {
-                fprintf(stderr, "Error! Not enough arguments on the stack for A.mod!\n");
+            if (check_stack(stack, "A.mod", 2, ARG_NUM, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val1 = list_pop(stack);
             GlassValue *val2 = list_pop(stack);
-            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
-                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
-                return 1;
-            }
             val1->num = fmod(val2->num, val1->num);
             list_add(stack, val1);
             free_glass_value(val1);
@@ -195,16 +239,11 @@ int execute_builtin(BuiltinFunc func, List *stack) {
         }
 
         case BUILTIN_MATH_MULTIPLY: {
-            if (list_len(stack) < 2) {
-                fprintf(stderr, "Error! Not enough arguments on the stack for A.m!\n");
+            if (check_stack(stack, "A.m", 2, ARG_NUM, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val1 = list_pop(stack);
             GlassValue *val2 = list_pop(stack);
-            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
-                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
-                return 1;
-            }
             val1->num = val2->num * val1->num;
             list_add(stack, val1);
             free_glass_value(val1);
@@ -213,16 +252,11 @@ int execute_builtin(BuiltinFunc func, List *stack) {
         }
 
         case BUILTIN_MATH_NOT_EQUAL: {
-            if (list_len(stack) < 2) {
-                fprintf(stderr, "Error! Not enough arguments on the stack for A.ne!\n");
+            if (check_stack(stack, "A.ne", 2, ARG_NUM, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val1 = list_pop(stack);
             GlassValue *val2 = list_pop(stack);
-            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
-                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
-                return 1;
-            }
             val1->num = (val2->num != val1->num ? 1.0 : 0.0);
             list_add(stack, val1);
             free_glass_value(val1);
@@ -231,16 +265,11 @@ int execute_builtin(BuiltinFunc func, List *stack) {
         }
 
         case BUILTIN_MATH_SUBTRACT: {
-            if (list_len(stack) < 2) {
-                fprintf(stderr, "Error! Not enough arguments on the stack for A.s!\n");
+            if (check_stack(stack, "A.s", 2, ARG_NUM, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val1 = list_pop(stack);
             GlassValue *val2 = list_pop(stack);
-            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
-                fprintf(stderr, "Error! Cannot subtract non-numbers!\n");
-                return 1;
-            }
             val2->num -= val1->num;
             list_add(stack, val2);
             free_glass_value(val1);
@@ -249,30 +278,20 @@ int execute_builtin(BuiltinFunc func, List *stack) {
         }
 
         case BUILTIN_OUTPUT_NUM: {
-            if (list_len(stack) == 0) {
-                fprintf(stderr, "Error! Stack is empty!\n");
+            if (check_stack(stack, "O.on", 1, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val = list_pop(stack);
-            if (val->type != VALUE_NUMBER) {
-                fprintf(stderr, "Error! Tried to output non-number as number!\n");
-                return 1;
-            }
             printf("%g", val->num);
             free_glass_value(val);
             break;
         }
 
         case BUILTIN_OUTPUT_STR: {
-            if (list_len(stack) == 0) {
-                fprintf(stderr, "Error! Stack is empty!\n");
+            if (check_stack(stack, "O.o", 1, ARG_STR)) {
                 return 1;
             }
             GlassValue *val = list_pop(stack);
-            if (val->type != VALUE_STRING) {
-                fprintf(stderr, "Error! Cannot output non-string!\n");
-                return 1;
-            }
             printf("%s", string_get_c_str(val->str));
             free_glass_value(val);
             break;
@@ -333,18 +352,11 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
         const GlassCommand *cmd = func_get_command(func, cmd_idx);
         switch (cmd->type) {
             case CMD_ASSIGN_SELF: {
-                if (list_len(stack) == 0) {
-                    fprintf(stderr, "Error! $ operation cannot be done on an empty stack.\n");
+                if (check_stack(stack, "$", 1, ARG_NAME)) {
                     free_map(local_vars);
                     return 1;
                 }
                 GlassValue *name_val = list_pop(stack);
-                if (name_val->type != VALUE_NAME) {
-                    fprintf(stderr, "Error! Cannot assign to a non-name!\n");
-                    free_glass_value(name_val);
-                    free_map(local_vars);
-                    return 1;
-                }
                 GlassValue *self_val = new_inst_value(inst);
                 set_var(name_val->str, self_val, globals, inst, local_vars);
                 free_glass_value(self_val);
@@ -353,20 +365,12 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
             }
 
             case CMD_ASSIGN_VAL: {
-                if (list_len(stack) < 2) {
-                    fprintf(stderr, "Error! = operation needs more arguments on the stack!\n");
+                if (check_stack(stack, "=", 2, ARG_NAME, ARG_ANY)) {
                     free_map(local_vars);
                     return 1;
                 }
                 GlassValue *val = list_pop(stack);
                 GlassValue *name_val = list_pop(stack);
-                if (name_val->type != VALUE_NAME) {
-                    fprintf(stderr, "Error! Unable to assign to a non-name!\n");
-                    free_glass_value(name_val);
-                    free_glass_value(val);
-                    free_map(local_vars);
-                    return 1;
-                }
                 set_var(name_val->str, val, globals, inst, local_vars);
                 free_glass_value(name_val);
                 free_glass_value(val);
@@ -394,17 +398,12 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
             }
 
             case CMD_GET_FUNC: {
-                if (list_len(stack) < 2) {
+                if (check_stack(stack, ".", 2, ARG_NAME, ARG_NAME)) {
+                    free_map(local_vars);
                     return 1;
                 }
                 GlassValue *fname_val = list_pop(stack);
                 GlassValue *oname_val = list_pop(stack);
-                if (fname_val->type != VALUE_NAME || oname_val->type != VALUE_NAME) {
-                    free_glass_value(fname_val);
-                    free_glass_value(oname_val);
-                    free_map(local_vars);
-                    return 1;
-                }
                 const GlassValue *obj_val = get_var(oname_val->str, globals, inst, local_vars);
                 if (obj_val == NULL) {
                     fprintf(stderr, "Error! %s not defined!\n",
@@ -438,18 +437,11 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
             }
 
             case CMD_GET_VAL: {
-                if (list_len(stack) == 0) {
-                    fprintf(stderr, "Error! * operation cannot be done on an empty stack.\n");
+                if (check_stack(stack, "*", 1, ARG_NAME)) {
                     free_map(local_vars);
                     return 1;
                 }
                 GlassValue *name_val = list_pop(stack);
-                if (name_val->type != VALUE_NAME) {
-                    fprintf(stderr, "Error! Cannot dereference a non-name!\n");
-                    free_glass_value(name_val);
-                    free_map(local_vars);
-                    return 1;
-                }
                 const GlassValue *val = get_var(name_val->str, globals, inst, local_vars);
                 if (val == NULL) {
                     fprintf(stderr, "Error! %s is not defined!\n",
@@ -463,18 +455,11 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
             }
 
             case CMD_EXECUTE_FUNC: {
-                if (list_len(stack) < 1) {
+                if (check_stack(stack, "?", 1, ARG_FUNC)) {
                     free_map(local_vars);
-                    fprintf(stderr, "Not enough arguments on the stack for ? operation.\n");
                     return 1;
                 }
                 GlassValue *func_val = list_pop(stack);
-                if (func_val->type != VALUE_FUNCTION) {
-                    fprintf(stderr, "Cannot execute non-function!\n");
-                    free_map(local_vars);
-                    free_glass_value(func_val);
-                    return 1;
-                }
                 int ret = execute_function(func_val, stack, globals, classes);
                 free_glass_value(func_val);
                 if (ret != 0) {
@@ -510,18 +495,20 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
             }
 
             case CMD_NEW_INST: {
-                if (list_len(stack) < 2) {
+                if (check_stack(stack, "!", 2, ARG_NAME, ARG_NAME)) {
                     return 1;
                 }
                 GlassValue *cname_val = list_pop(stack);
                 GlassValue *oname_val = list_pop(stack);
-                if (cname_val->type != VALUE_NAME || oname_val->type != VALUE_NAME) {
-                    free_map(local_vars);
+                const GlassClass *gclass = map_get(classes, cname_val->str);
+                if (gclass == NULL) {
+                    fprintf(stderr, "Error! (%s) is not a class!\n",
+                            string_get_c_str(cname_val->str));
                     free_glass_value(cname_val);
                     free_glass_value(oname_val);
+                    free_map(local_vars);
                     return 1;
                 }
-                const GlassClass *gclass = map_get(classes, cname_val->str);
                 GlassInstance *inst = new_glass_instance(gclass);
                 GlassValue *inst_val = new_inst_value(inst);
                 set_var(oname_val->str, inst_val, globals, inst, local_vars);
@@ -530,8 +517,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
             }
 
             case CMD_POP_STACK: {
-                if (list_len(stack) == 0) {
-                    fprintf(stderr, "Unable to pop an empty stack!\n");
+                if (check_stack(stack, ",", 1, ARG_ANY)) {
                     free_map(local_vars);
                     return 1;
                 }

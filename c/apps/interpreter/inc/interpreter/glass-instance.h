@@ -19,6 +19,8 @@ const struct GlassFunction *instance_get_func(const GlassInstance *inst, const s
 
 const struct GlassValue *instance_get_var(const GlassInstance *inst, const struct String *name);
 
+const struct GlassClass *instance_get_class(const GlassInstance *inst);
+
 void instance_set_var(GlassInstance *inst, const struct String *name, const struct GlassValue *val);
 
 #endif

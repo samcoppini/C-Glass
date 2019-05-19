@@ -43,4 +43,6 @@ GlassValue *copy_value(const GlassValue *val);
 
 void free_glass_value(GlassValue *value);
 
+struct String *value_get_string(const GlassValue *val);
+
 #endif
