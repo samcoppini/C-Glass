@@ -9,6 +9,7 @@
 #include "utils/map.h"
 #include "utils/string.h"
 
+#include <math.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -51,9 +52,97 @@ int execute_builtin(BuiltinFunc func, List *stack) {
             break;
         }
 
+        case BUILTIN_MATH_DIVIDE: {
+            if (list_len(stack) < 2) {
+                fprintf(stderr, "Error! Not enough arguments on the stack for A.d!\n");
+                return 1;
+            }
+            GlassValue *val1 = list_pop(stack);
+            GlassValue *val2 = list_pop(stack);
+            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
+                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
+                return 1;
+            }
+            val1->num = val2->num / val1->num;
+            list_add(stack, val1);
+            free_glass_value(val1);
+            free_glass_value(val2);
+            break;
+        }
+
+        case BUILTIN_MATH_EQUAL: {
+            if (list_len(stack) < 2) {
+                fprintf(stderr, "Error! Not enough arguments on the stack for A.e!\n");
+                return 1;
+            }
+            GlassValue *val1 = list_pop(stack);
+            GlassValue *val2 = list_pop(stack);
+            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
+                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
+                return 1;
+            }
+            val1->num = (val2->num == val1->num ? 1.0 : 0.0);
+            list_add(stack, val1);
+            free_glass_value(val1);
+            free_glass_value(val2);
+            break;
+        }
+
+        case BUILTIN_MATH_FLOOR: {
+            if (list_len(stack) == 0) {
+                fprintf(stderr, "Error! Not enough arguments on the stack for A.f!\n");
+                return 1;
+            }
+            GlassValue *val = list_pop(stack);
+            if (val->type != VALUE_NUMBER) {
+                fprintf(stderr, "Error! Cannot floor non-number!\n");
+                return 1;
+            }
+            val->num = floor(val->num);
+            list_add(stack, val);
+            free_glass_value(val);
+            break;
+        }
+
+        case BUILTIN_MATH_GREATER_THAN: {
+            if (list_len(stack) < 2) {
+                fprintf(stderr, "Error! Not enough arguments on the stack for A.gt!\n");
+                return 1;
+            }
+            GlassValue *val1 = list_pop(stack);
+            GlassValue *val2 = list_pop(stack);
+            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
+                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
+                return 1;
+            }
+            val1->num = (val2->num > val1->num ? 1.0 : 0.0);
+            list_add(stack, val1);
+            free_glass_value(val1);
+            free_glass_value(val2);
+            break;
+        }
+
+        case BUILTIN_MATH_GREATER_OR_EQUAL: {
+            if (list_len(stack) < 2) {
+                fprintf(stderr, "Error! Not enough arguments on the stack for A.ge!\n");
+                return 1;
+            }
+            GlassValue *val1 = list_pop(stack);
+            GlassValue *val2 = list_pop(stack);
+            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
+                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
+                return 1;
+            }
+            val1->num = (val2->num >= val1->num ? 1.0 : 0.0);
+            list_add(stack, val1);
+            free_glass_value(val1);
+            free_glass_value(val2);
+            break;
+        }
+
         case BUILTIN_MATH_LESS_OR_EQUAL: {
             if (list_len(stack) < 2) {
-                fprintf(stderr, "Error! Not enough arguments on the stack for A.s!\n");
+                fprintf(stderr, "Error! Not enough arguments on the stack for A.le!\n");
                 return 1;
             }
             GlassValue *val1 = list_pop(stack);
@@ -63,6 +152,78 @@ int execute_builtin(BuiltinFunc func, List *stack) {
                 return 1;
             }
             val1->num = (val2->num <= val1->num ? 1.0 : 0.0);
+            list_add(stack, val1);
+            free_glass_value(val1);
+            free_glass_value(val2);
+            break;
+        }
+        
+        case BUILTIN_MATH_LESS_THAN: {
+            if (list_len(stack) < 2) {
+                fprintf(stderr, "Error! Not enough arguments on the stack for A.lt!\n");
+                return 1;
+            }
+            GlassValue *val1 = list_pop(stack);
+            GlassValue *val2 = list_pop(stack);
+            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
+                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
+                return 1;
+            }
+            val1->num = (val2->num < val1->num ? 1.0 : 0.0);
+            list_add(stack, val1);
+            free_glass_value(val1);
+            free_glass_value(val2);
+            break;
+        }
+
+        case BUILTIN_MATH_MODULO: {
+            if (list_len(stack) < 2) {
+                fprintf(stderr, "Error! Not enough arguments on the stack for A.mod!\n");
+                return 1;
+            }
+            GlassValue *val1 = list_pop(stack);
+            GlassValue *val2 = list_pop(stack);
+            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
+                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
+                return 1;
+            }
+            val1->num = fmod(val2->num, val1->num);
+            list_add(stack, val1);
+            free_glass_value(val1);
+            free_glass_value(val2);
+            break;
+        }
+
+        case BUILTIN_MATH_MULTIPLY: {
+            if (list_len(stack) < 2) {
+                fprintf(stderr, "Error! Not enough arguments on the stack for A.m!\n");
+                return 1;
+            }
+            GlassValue *val1 = list_pop(stack);
+            GlassValue *val2 = list_pop(stack);
+            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
+                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
+                return 1;
+            }
+            val1->num = val2->num * val1->num;
+            list_add(stack, val1);
+            free_glass_value(val1);
+            free_glass_value(val2);
+            break;
+        }
+
+        case BUILTIN_MATH_NOT_EQUAL: {
+            if (list_len(stack) < 2) {
+                fprintf(stderr, "Error! Not enough arguments on the stack for A.ne!\n");
+                return 1;
+            }
+            GlassValue *val1 = list_pop(stack);
+            GlassValue *val2 = list_pop(stack);
+            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
+                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
+                return 1;
+            }
+            val1->num = (val2->num != val1->num ? 1.0 : 0.0);
             list_add(stack, val1);
             free_glass_value(val1);
             free_glass_value(val2);

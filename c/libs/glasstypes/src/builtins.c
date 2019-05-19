@@ -30,6 +30,7 @@ const BuiltinInfo BUILTIN_CLASS_INFO[NUM_BUILTIN_CLASSES] = {
         {"gt",  BUILTIN_MATH_GREATER_THAN},
         {"le",  BUILTIN_MATH_LESS_OR_EQUAL},
         {"lt",  BUILTIN_MATH_LESS_THAN},
+        {"m",   BUILTIN_MATH_MULTIPLY},
         {"mod", BUILTIN_MATH_MODULO},
         {"ne",  BUILTIN_MATH_NOT_EQUAL},
         {"s",   BUILTIN_MATH_SUBTRACT}},
