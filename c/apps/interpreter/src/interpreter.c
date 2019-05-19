@@ -33,6 +33,75 @@ VarScope get_var_scope(const String *str) {
 
 int execute_builtin(BuiltinFunc func, List *stack) {
     switch (func) {
+        case BUILTIN_MATH_ADD: {
+            if (list_len(stack) < 2) {
+                fprintf(stderr, "Error! Not enough arguments on the stack for A.a!\n");
+                return 1;
+            }
+            GlassValue *val1 = list_pop(stack);
+            GlassValue *val2 = list_pop(stack);
+            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
+                fprintf(stderr, "Error! Cannot add non-numbers!\n");
+                return 1;
+            }
+            val1->num += val2->num;
+            list_add(stack, val1);
+            free_glass_value(val1);
+            free_glass_value(val2);
+            break;
+        }
+
+        case BUILTIN_MATH_LESS_OR_EQUAL: {
+            if (list_len(stack) < 2) {
+                fprintf(stderr, "Error! Not enough arguments on the stack for A.s!\n");
+                return 1;
+            }
+            GlassValue *val1 = list_pop(stack);
+            GlassValue *val2 = list_pop(stack);
+            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
+                fprintf(stderr, "Error! Cannot compare non-numbers!\n");
+                return 1;
+            }
+            val1->num = (val2->num <= val1->num ? 1.0 : 0.0);
+            list_add(stack, val1);
+            free_glass_value(val1);
+            free_glass_value(val2);
+            break;
+        }
+
+        case BUILTIN_MATH_SUBTRACT: {
+            if (list_len(stack) < 2) {
+                fprintf(stderr, "Error! Not enough arguments on the stack for A.s!\n");
+                return 1;
+            }
+            GlassValue *val1 = list_pop(stack);
+            GlassValue *val2 = list_pop(stack);
+            if (val1->type != VALUE_NUMBER || val2->type != VALUE_NUMBER) {
+                fprintf(stderr, "Error! Cannot subtract non-numbers!\n");
+                return 1;
+            }
+            val2->num -= val1->num;
+            list_add(stack, val2);
+            free_glass_value(val1);
+            free_glass_value(val2);
+            break;
+        }
+
+        case BUILTIN_OUTPUT_NUM: {
+            if (list_len(stack) == 0) {
+                fprintf(stderr, "Error! Stack is empty!\n");
+                return 1;
+            }
+            GlassValue *val = list_pop(stack);
+            if (val->type != VALUE_NUMBER) {
+                fprintf(stderr, "Error! Tried to output non-number as number!\n");
+                return 1;
+            }
+            printf("%g", val->num);
+            free_glass_value(val);
+            break;
+        }
+
         case BUILTIN_OUTPUT_STR: {
             if (list_len(stack) == 0) {
                 fprintf(stderr, "Error! Stack is empty!\n");
@@ -53,6 +122,18 @@ int execute_builtin(BuiltinFunc func, List *stack) {
     }
 
     return 0;
+}
+
+bool value_is_truthy(const GlassValue *val) {
+    if (val->type == VALUE_NUMBER) {
+        return val->num != 0.0;
+    }
+    else if (val->type == VALUE_STRING) {
+        return string_len(val->str) != 0;
+    }
+    else {
+        return false;
+    }
 }
 
 const GlassValue *get_var(const String *name, const Map *globals, const GlassInstance *inst, const Map *locals) {
@@ -90,12 +171,64 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
     for (size_t cmd_idx = 0; cmd_idx < func_len(func); cmd_idx++) {
         const GlassCommand *cmd = func_get_command(func, cmd_idx);
         switch (cmd->type) {
+            case CMD_ASSIGN_SELF: {
+                if (list_len(stack) == 0) {
+                    fprintf(stderr, "Error! $ operation cannot be done on an empty stack.\n");
+                    free_map(local_vars);
+                    return 1;
+                }
+                GlassValue *name_val = list_pop(stack);
+                if (name_val->type != VALUE_NAME) {
+                    fprintf(stderr, "Error! Cannot assign to a non-name!\n");
+                    free_glass_value(name_val);
+                    free_map(local_vars);
+                    return 1;
+                }
+                GlassValue *self_val = new_inst_value(inst);
+                set_var(name_val->str, self_val, globals, inst, local_vars);
+                free_glass_value(self_val);
+                free_glass_value(name_val);
+                break;
+            }
+
+            case CMD_ASSIGN_VAL: {
+                if (list_len(stack) < 2) {
+                    fprintf(stderr, "Error! = operation needs more arguments on the stack!\n");
+                    free_map(local_vars);
+                    return 1;
+                }
+                GlassValue *val = list_pop(stack);
+                GlassValue *name_val = list_pop(stack);
+                if (name_val->type != VALUE_NAME) {
+                    fprintf(stderr, "Error! Unable to assign to a non-name!\n");
+                    free_glass_value(name_val);
+                    free_glass_value(val);
+                    free_map(local_vars);
+                    return 1;
+                }
+                set_var(name_val->str, val, globals, inst, local_vars);
+                free_glass_value(name_val);
+                free_glass_value(val);
+                break;
+            }
+
             case CMD_BUILTIN: {
                 int ret = execute_builtin(cmd->builtin, stack);
                 if (ret != 0) {
                     free_map(local_vars);
                     return ret;
                 }
+                break;
+            }
+
+            case CMD_DUPLICATE: {
+                if (list_len(stack) <= cmd->index) {
+                    fprintf(stderr, "Cannot duplicate out-of-range stack element!\n");
+                    free_map(local_vars);
+                    return 1;
+                }
+                const GlassValue *val = list_get(stack, list_len(stack) - cmd->index - 1);
+                list_add(stack, val);
                 break;
             }
 
@@ -113,7 +246,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                 }
                 const GlassValue *obj_val = get_var(oname_val->str, globals, inst, local_vars);
                 if (obj_val == NULL) {
-                    fprintf(stderr, "Error! %s defined multiple times!\n",
+                    fprintf(stderr, "Error! %s not defined!\n",
                             string_get_c_str(oname_val->str));
                     free_glass_value(fname_val);
                     free_glass_value(oname_val);
@@ -143,6 +276,31 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                 break;
             }
 
+            case CMD_GET_VAL: {
+                if (list_len(stack) == 0) {
+                    fprintf(stderr, "Error! * operation cannot be done on an empty stack.\n");
+                    free_map(local_vars);
+                    return 1;
+                }
+                GlassValue *name_val = list_pop(stack);
+                if (name_val->type != VALUE_NAME) {
+                    fprintf(stderr, "Error! Cannot dereference a non-name!\n");
+                    free_glass_value(name_val);
+                    free_map(local_vars);
+                    return 1;
+                }
+                const GlassValue *val = get_var(name_val->str, globals, inst, local_vars);
+                if (val == NULL) {
+                    fprintf(stderr, "Error! %s is not defined!\n",
+                            string_get_c_str(name_val->str));
+                    free_map(local_vars);
+                    return 1;
+                }
+                list_add(stack, val);
+                free_glass_value(name_val);
+                break;
+            }
+
             case CMD_EXECUTE_FUNC: {
                 if (list_len(stack) < 1) {
                     free_map(local_vars);
@@ -160,6 +318,32 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                 free_glass_value(func_val);
                 if (ret != 0) {
                     return ret;
+                }
+                break;
+            }
+
+            case CMD_LOOP_BEGIN: {
+                const GlassValue *val = get_var(cmd->str, globals, inst, local_vars);
+                if (val == NULL) {
+                    fprintf(stderr, "Error! %s is undefined!\n", string_get_c_str(cmd->str));
+                    free_map(local_vars);
+                    return 1;
+                }
+                if (!value_is_truthy(val)) {
+                    cmd_idx = cmd->index;
+                }
+                break;
+            }
+            
+            case CMD_LOOP_END: {
+                const GlassValue *val = get_var(cmd->str, globals, inst, local_vars);
+                if (val == NULL) {
+                    fprintf(stderr, "Error! %s is undefined!\n", string_get_c_str(cmd->str));
+                    free_map(local_vars);
+                    return 1;
+                }
+                if (value_is_truthy(val)) {
+                    cmd_idx = cmd->index;
                 }
                 break;
             }
@@ -184,10 +368,28 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                 break;
             }
 
+            case CMD_POP_STACK: {
+                if (list_len(stack) == 0) {
+                    fprintf(stderr, "Unable to pop an empty stack!\n");
+                    free_map(local_vars);
+                    return 1;
+                }
+                GlassValue *val = list_pop(stack);
+                free_glass_value(val);
+                break;
+            }
+
             case CMD_PUSH_NAME: {
                 GlassValue *name_val = new_name_value(cmd->str);
                 list_add(stack, name_val);
                 free_glass_value(name_val);
+                break;
+            }
+
+            case CMD_PUSH_NUM: {
+                GlassValue *num_val = new_number_value(cmd->number);
+                list_add(stack, num_val);
+                free_glass_value(num_val);
                 break;
             }
 
@@ -196,6 +398,11 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                 list_add(stack, str_val);
                 free_glass_value(str_val);
                 break;
+            }
+
+            case CMD_RETURN: {
+                free_map(local_vars);
+                return 0;
             }
 
             default:
