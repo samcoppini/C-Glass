@@ -420,6 +420,28 @@ int execute_builtin(BuiltinFunc func, List *stack) {
             break;
         }
 
+        case BUILTIN_VAR_NEW: {
+            static int var_index = 0;
+            char buf[80];
+            sprintf(buf, "<Anonymous Var %d>", var_index);
+            var_index++;
+            String *str = string_from_chars(buf);
+            GlassValue *val = new_name_value(str);
+            list_add(stack, val);
+            free_glass_value(val);
+            free_string(str);
+            break;
+        }
+
+        case BUILTIN_VAR_DELETE: {
+            if (check_stack(stack, "V.d", 1, ARG_NAME)) {
+                return 1;
+            }
+            GlassValue *val = list_pop(stack);
+            free_glass_value(val);
+            break;
+        }
+
         default:
             break;
     }
