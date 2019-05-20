@@ -137,6 +137,36 @@ bool check_stack(const List *stack, const char *op_name, size_t size, ...) {
 
 int execute_builtin(BuiltinFunc func, List *stack) {
     switch (func) {
+        case BUILTIN_INPUT_CHAR: {
+            String *str = string_from_char(getchar());
+            GlassValue *val = new_str_value(str);
+            list_add(stack, val);
+            free_string(str);
+            free_glass_value(val);
+            break;
+        }
+
+        case BUILTIN_INPUT_EOF: {
+            double eof = feof(stdin) ? 1.0 : 0.0;
+            GlassValue *val = new_number_value(eof);
+            list_add(stack, val);
+            free_glass_value(val);
+            break;
+        }
+
+        case BUILTIN_INPUT_LINE: {
+            String *str = new_string();
+            int c;
+            while ((c = getchar()) != EOF && c != '\n') {
+                string_add_char(str, c);
+            }
+            GlassValue *str_val = new_str_value(str);
+            list_add(stack, str_val);
+            free_string(str);
+            free_glass_value(str_val);
+            break;
+        }
+
         case BUILTIN_MATH_ADD: {
             if (check_stack(stack, "A.a", 1, ARG_NUM)) {
                 return 1;
