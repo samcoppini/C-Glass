@@ -297,6 +297,45 @@ int execute_builtin(BuiltinFunc func, List *stack) {
             break;
         }
 
+        case BUILTIN_STR_APPEND: {
+            if (check_stack(stack, "S.a", 2, ARG_STR, ARG_STR)) {
+                return 1;
+            }
+            GlassValue *str1 = list_pop(stack);
+            GlassValue *str2 = list_pop(stack);
+            string_add_str(str2->str, str1->str);
+            list_add(stack, str2);
+            free_glass_value(str1);
+            free_glass_value(str2);
+            break;
+        }
+
+        case BUILTIN_STR_EQUAL: {
+            if (check_stack(stack, "S.e", 2, ARG_STR, ARG_STR)) {
+                return 1;
+            }
+            GlassValue *str1 = list_pop(stack);
+            GlassValue *str2 = list_pop(stack);
+            GlassValue *res = new_number_value(strings_equal(str1->str, str2->str) ? 1.0 : 0.0);
+            list_add(stack, res);
+            free_glass_value(str1);
+            free_glass_value(str2);
+            free_glass_value(res);
+            break;
+        }
+
+        case BUILTIN_STR_LENGTH: {
+            if (check_stack(stack, "S.l", 1, ARG_STR)) {
+                return 1;
+            }
+            GlassValue *str_val = list_pop(stack);
+            GlassValue *len_val = new_number_value(string_len(str_val->str));
+            list_add(stack, len_val);
+            free_glass_value(len_val);
+            free_glass_value(str_val);
+            break;
+        }
+
         default:
             break;
     }
