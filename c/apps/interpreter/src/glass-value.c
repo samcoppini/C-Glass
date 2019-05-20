@@ -127,6 +127,10 @@ String *value_get_string(const GlassValue *val) {
             for (size_t i = 0; i < string_len(str); i++) {
                 char c = string_get(str, i);
                 switch (c) {
+                    case '\\':
+                        string_add_chars(str, "\\\\");
+                        break;
+
                     case '"':
                         string_add_chars(str, "\\\"");
                         break;
