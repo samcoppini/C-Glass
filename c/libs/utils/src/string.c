@@ -87,6 +87,10 @@ void string_add_str(String *str1, const String *str2) {
     str1->len += str2->len;
 }
 
+void string_set(String *str, size_t index, char c) {
+    str->buf[index] = c;
+}
+
 size_t hash_string(const String *str) {
     size_t hash = 5381;
     for (size_t i = 0; i < str->len; i++) {

@@ -35,6 +35,8 @@ void string_add_chars(String *str, const char *chars);
 // Adds the content of the string to the end of another string
 void string_add_str(String *str1, const String *str2);
 
+void string_set(String *str, size_t index, char c);
+
 // Returns a hash for the string
 size_t hash_string(const String *str);
 

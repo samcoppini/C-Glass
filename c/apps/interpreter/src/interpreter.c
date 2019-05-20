@@ -24,8 +24,10 @@ typedef enum VarScope {
 
 typedef enum ArgType {
     ARG_ANY,
+    ARG_CHAR,
     ARG_FUNC,
     ARG_INST,
+    ARG_INT,
     ARG_NAME,
     ARG_NUM,
     ARG_STR,
@@ -34,7 +36,9 @@ typedef enum ArgType {
 const char *arg_name_str(ArgType type) {
     switch (type) {
         case ARG_ANY:  return "any";
+        case ARG_CHAR: return "character";
         case ARG_FUNC: return "function";
+        case ARG_INT:  return "integer";
         case ARG_INST: return "instance";
         case ARG_NAME: return "name";
         case ARG_NUM:  return "number";
@@ -78,6 +82,11 @@ bool check_stack(const List *stack, const char *op_name, size_t size, ...) {
         switch (types[i]) {
             case ARG_ANY:
                 break;
+            
+            case ARG_CHAR:
+                types_matched &= (val->type == VALUE_STRING &&
+                                  string_len(val->str) == 1);
+                break;
 
             case ARG_FUNC:
                 types_matched &= (val->type == VALUE_FUNCTION);
@@ -85,6 +94,11 @@ bool check_stack(const List *stack, const char *op_name, size_t size, ...) {
             
             case ARG_INST:
                 types_matched &= (val->type == VALUE_INSTANCE);
+                break;
+
+            case ARG_INT:
+                types_matched &= (val->type == VALUE_NUMBER &&
+                                  val->num == floor(val->num));
                 break;
 
             case ARG_NAME:
@@ -324,6 +338,28 @@ int execute_builtin(BuiltinFunc func, List *stack) {
             break;
         }
 
+        case BUILTIN_STR_INDEX: {
+            if (check_stack(stack, "S.i", 2, ARG_STR, ARG_INT)) {
+                return 1;
+            }
+            GlassValue *int_val = list_pop(stack);
+            GlassValue *str_val = list_pop(stack);
+            if (int_val->num < 0 || int_val->num >= string_len(str_val->str)) {
+                fprintf(stderr,
+                        "Error! Index %g is out of range for S.i operation with string of length %u.\n",
+                        int_val->num, string_len(str_val->str));
+                return 1;
+            }
+            String *char_str = string_from_char(string_get(str_val->str, (size_t) int_val->num));
+            GlassValue *char_val = new_str_value(char_str);
+            list_add(stack, char_val);
+            free_string(char_str);
+            free_glass_value(char_val);
+            free_glass_value(int_val);
+            free_glass_value(str_val);
+            break;
+        }
+
         case BUILTIN_STR_LENGTH: {
             if (check_stack(stack, "S.l", 1, ARG_STR)) {
                 return 1;
@@ -333,6 +369,54 @@ int execute_builtin(BuiltinFunc func, List *stack) {
             list_add(stack, len_val);
             free_glass_value(len_val);
             free_glass_value(str_val);
+            break;
+        }
+
+        case BUILTIN_STR_NUM_TO_STR: {
+            if (check_stack(stack, "S.ns", 1, ARG_INT)) {
+                return 1;
+            }
+            GlassValue *num_val = list_pop(stack);
+            String *str = string_from_char((char) num_val->num);
+            GlassValue *str_val = new_str_value(str);
+            list_add(stack, str_val);
+            free_glass_value(str_val);
+            free_glass_value(num_val);
+            free_string(str);
+            break;
+        }
+
+        case BUILTIN_STR_REPLACE: {
+            if (check_stack(stack, "S.si", 3, ARG_STR, ARG_INT, ARG_CHAR)) {
+                return 1;
+            }
+            GlassValue *char_val = list_pop(stack);
+            GlassValue *int_val = list_pop(stack);
+            GlassValue *str_val = list_pop(stack);
+            if (int_val->num < 0 || int_val->num >= string_len(str_val->str)) {
+                fprintf(stderr,
+                        "Error! Index %u is out of range for S.si operation with string of length %u.\n",
+                        (unsigned) int_val->num, string_len(str_val->str));
+                return 1;
+            }
+            string_set(str_val->str, int_val->num, string_get(char_val->str, 0));
+            list_add(stack, str_val);
+            free_glass_value(char_val);
+            free_glass_value(int_val);
+            free_glass_value(str_val);
+            break;
+        }
+
+        case BUILTIN_STR_STR_TO_NUM: {
+            if (check_stack(stack, "S.sn", 1, ARG_CHAR)) {
+                return 1;
+            }
+            GlassValue *char_val = list_pop(stack);
+            char c = string_get(char_val->str, 0);
+            GlassValue *num_val = new_number_value((double) c);
+            list_add(stack, num_val);
+            free_glass_value(num_val);
+            free_glass_value(char_val);
             break;
         }
 

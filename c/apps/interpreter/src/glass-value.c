@@ -124,8 +124,8 @@ String *value_get_string(const GlassValue *val) {
 
         case VALUE_STRING: {
             String *str = string_from_char('"');
-            for (size_t i = 0; i < string_len(str); i++) {
-                char c = string_get(str, i);
+            for (size_t i = 0; i < string_len(val->str); i++) {
+                char c = string_get(val->str, i);
                 switch (c) {
                     case '\\':
                         string_add_chars(str, "\\\\");
