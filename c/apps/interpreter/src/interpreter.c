@@ -684,11 +684,11 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                     free_map(local_vars);
                     return 1;
                 }
-                GlassInstance *inst = new_glass_instance(gclass);
+                GlassInstance *new_inst = new_glass_instance(gclass);
                 String *ctor_name = string_from_chars("c__");
                 int ctor_ret = 0;
-                if (instance_has_func(inst, ctor_name)) {
-                    GlassValue *ctor_val = new_func_value(inst, ctor_name);
+                if (instance_has_func(new_inst, ctor_name)) {
+                    GlassValue *ctor_val = new_func_value(new_inst, ctor_name);
                     ctor_ret = execute_function(ctor_val, stack, globals, classes);
                     free_glass_value(ctor_val);
                 }
@@ -696,7 +696,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                     free_map(local_vars);
                     return 1;
                 }
-                GlassValue *inst_val = new_inst_value(inst);
+                GlassValue *inst_val = new_inst_value(new_inst);
                 set_var(oname_val->str, inst_val, globals, inst, local_vars);
                 free_glass_value(inst_val);
                 free_string(ctor_name);
