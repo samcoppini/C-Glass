@@ -63,7 +63,7 @@ VarScope get_var_scope(const String *str) {
 bool check_stack(const List *stack, const char *op_name, size_t size, ...) {
     if (list_len(stack) < size) {
         fprintf(stderr, "Error! %s requires %u elements on the stack, but the stack only has %u elements!\n",
-                op_name, size, list_len(stack));
+                op_name, (unsigned) size, (unsigned) list_len(stack));
         return true;
     }
 
@@ -377,7 +377,7 @@ int execute_builtin(BuiltinFunc func, List *stack) {
             if (int_val->num < 0 || int_val->num >= string_len(str_val->str)) {
                 fprintf(stderr,
                         "Error! Index %g is out of range for S.i operation with string of length %u.\n",
-                        int_val->num, string_len(str_val->str));
+                        int_val->num, (unsigned) string_len(str_val->str));
                 return 1;
             }
             String *char_str = string_from_char(string_get(str_val->str, (size_t) int_val->num));
@@ -426,7 +426,7 @@ int execute_builtin(BuiltinFunc func, List *stack) {
             if (int_val->num < 0 || int_val->num >= string_len(str_val->str)) {
                 fprintf(stderr,
                         "Error! Index %u is out of range for S.si operation with string of length %u.\n",
-                        (unsigned) int_val->num, string_len(str_val->str));
+                        (unsigned) int_val->num, (unsigned) string_len(str_val->str));
                 return 1;
             }
             string_set(str_val->str, int_val->num, string_get(char_val->str, 0));
@@ -605,9 +605,9 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                     free_map(local_vars);
                     return 1;
                 }
-                GlassValue *func_val = new_func_value(obj_val->inst, fname_val->str);
-                list_add(stack, func_val);
-                free_glass_value(func_val);
+                GlassValue *new_func = new_func_value(obj_val->inst, fname_val->str);
+                list_add(stack, new_func);
+                free_glass_value(new_func);
                 break;
             }
 
@@ -634,9 +634,9 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                     free_map(local_vars);
                     return 1;
                 }
-                GlassValue *func_val = list_pop(stack);
-                int ret = execute_function(func_val, stack, globals, classes);
-                free_glass_value(func_val);
+                GlassValue *new_func = list_pop(stack);
+                int ret = execute_function(new_func, stack, globals, classes);
+                free_glass_value(new_func);
                 if (ret != 0) {
                     return ret;
                 }

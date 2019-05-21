@@ -387,8 +387,8 @@ Map *classes_from_files(List *filenames, bool include_builtins) {
         }
 
         List *class_names = map_get_keys(new_classes);
-        for (size_t i = 0; i < list_len(class_names); i++) {
-            String *cname = list_get_mutable(class_names, i);
+        for (size_t j = 0; j < list_len(class_names); j++) {
+            String *cname = list_get_mutable(class_names, j);
 
             if (map_has(classes, cname)) {
                 fprintf(stderr, "Error! %s defined multiple times!\n", 
