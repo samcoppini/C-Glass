@@ -15,7 +15,7 @@ wrote it in C, I had to re-write the interpreter.
 
 ## Building the interpreter
 
-This repo uses the [Meson build system](meson.build) to build. To build the interpreter, navigate to the source root, and run these commands:
+This repo uses the [Meson build system](https://mesonbuild.com/) to build. To build the interpreter, navigate to the source root, and run these commands:
 
 ```shell
 $ meson build
