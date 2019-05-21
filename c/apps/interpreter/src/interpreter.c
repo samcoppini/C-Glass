@@ -685,9 +685,21 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                     return 1;
                 }
                 GlassInstance *inst = new_glass_instance(gclass);
+                String *ctor_name = string_from_chars("c__");
+                int ctor_ret = 0;
+                if (instance_has_func(inst, ctor_name)) {
+                    GlassValue *ctor_val = new_func_value(inst, ctor_name);
+                    ctor_ret = execute_function(ctor_val, stack, globals, classes);
+                    free_glass_value(ctor_val);
+                }
+                if (ctor_ret != 0) {
+                    free_map(local_vars);
+                    return 1;
+                }
                 GlassValue *inst_val = new_inst_value(inst);
                 set_var(oname_val->str, inst_val, globals, inst, local_vars);
                 free_glass_value(inst_val);
+                free_string(ctor_name);
                 break;
             }
 
@@ -757,14 +769,23 @@ int run_interpreter(const Map *classes) {
 
     List *stack = new_list(VALUE_COPY_OPS);
     Map *globals = new_map(STRING_HASH_OPS, VALUE_COPY_OPS);
+    int ret_val = 0;
 
     GlassInstance *main_inst = new_glass_instance(main_class);
+    String *ctor_name = string_from_chars("c__");
+    if (instance_has_func(main_inst, ctor_name)) {
+        GlassValue *ctor_val = new_func_value(main_inst, ctor_name);
+        ret_val = execute_function(ctor_val, stack, globals, classes);
+        free_glass_value(ctor_val);
+    }
 
-    GlassValue val = {
-        VALUE_FUNCTION, .inst = main_inst, .str = copy_string(main_func_name)
-    };
+    if (ret_val == 0) {
+        GlassValue val = {
+            VALUE_FUNCTION, .inst = main_inst, .str = main_func_name
+        };
 
-    int ret_val = execute_function(&val, stack, globals, classes);
+        ret_val = execute_function(&val, stack, globals, classes);
+    }
 
     free_map(globals);
     free_list(stack);
