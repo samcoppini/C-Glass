@@ -14,14 +14,14 @@ static GlassValue *new_glass_value(ValueType type) {
     return val;
 }
 
-GlassValue *new_func_value(GlassInstance *inst, const String *name) {
+GlassValue *new_func_value(GlassInstance inst, const String *name) {
     GlassValue *val = new_glass_value(VALUE_FUNCTION);
     val->inst = inst;
     val->str = copy_string(name);
     return val;
 }
 
-GlassValue *new_inst_value(GlassInstance *inst) {
+GlassValue *new_inst_value(GlassInstance inst) {
     GlassValue *val = new_glass_value(VALUE_INSTANCE);
     val->inst = inst;
     return val;

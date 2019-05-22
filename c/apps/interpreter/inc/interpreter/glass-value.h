@@ -1,8 +1,9 @@
 #ifndef INTERPRETER_GLASS_VALUE_H
 #define INTERPRETER_GLASS_VALUE_H
 
+#include "interpreter/glass-instance.h"
+
 struct CopyInterface;
-struct GlassInstance;
 struct String;
 
 typedef enum ValueType {
@@ -18,7 +19,7 @@ typedef struct GlassValue {
 
     union {
         struct {
-            struct GlassInstance *inst;
+            GlassInstance inst;
 
             struct String *str;
         };
@@ -29,9 +30,9 @@ typedef struct GlassValue {
 
 extern const struct CopyInterface *VALUE_COPY_OPS;
 
-GlassValue *new_func_value(struct GlassInstance *inst, const struct String *name);
+GlassValue *new_func_value(GlassInstance inst, const struct String *name);
 
-GlassValue *new_inst_value(struct GlassInstance *inst);
+GlassValue *new_inst_value(GlassInstance inst);
 
 GlassValue *new_name_value(const struct String *name);
 

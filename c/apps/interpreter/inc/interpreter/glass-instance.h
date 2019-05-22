@@ -2,25 +2,30 @@
 #define INTERPRETER_GLASS_INSTANCE_H
 
 #include <stdbool.h>
+#include <stddef.h>
 
-typedef struct GlassInstance GlassInstance;
+typedef size_t GlassInstance;
 struct GlassClass;
 struct GlassFunction;
 struct GlassValue;
 struct String;
 
-GlassInstance *new_glass_instance(const struct GlassClass *gclass);
+void init_instances(void);
 
-bool instance_has_var(const GlassInstance *inst, const struct String *name);
+void free_instances(void);
 
-bool instance_has_func(const GlassInstance *inst, const struct String *name);
+GlassInstance new_glass_instance(const struct GlassClass *gclass);
 
-const struct GlassFunction *instance_get_func(const GlassInstance *inst, const struct String *name);
+bool instance_has_var(const GlassInstance inst, const struct String *name);
 
-const struct GlassValue *instance_get_var(const GlassInstance *inst, const struct String *name);
+bool instance_has_func(const GlassInstance inst, const struct String *name);
 
-const struct GlassClass *instance_get_class(const GlassInstance *inst);
+const struct GlassFunction *instance_get_func(const GlassInstance inst, const struct String *name);
 
-void instance_set_var(GlassInstance *inst, const struct String *name, const struct GlassValue *val);
+const struct GlassValue *instance_get_var(const GlassInstance inst, const struct String *name);
+
+const struct GlassClass *instance_get_class(const GlassInstance inst);
+
+void instance_set_var(GlassInstance inst, const struct String *name, const struct GlassValue *val);
 
 #endif

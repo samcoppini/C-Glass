@@ -512,7 +512,7 @@ bool value_is_truthy(const GlassValue *val) {
     }
 }
 
-const GlassValue *get_var(const String *name, const Map *globals, const GlassInstance *inst, const Map *locals) {
+const GlassValue *get_var(const String *name, const Map *globals, const GlassInstance inst, const Map *locals) {
     switch (get_var_scope(name)) {
         case SCOPE_LOCAL:
             return map_get(locals, name);
@@ -524,7 +524,7 @@ const GlassValue *get_var(const String *name, const Map *globals, const GlassIns
     return NULL;
 }
 
-void set_var(const String *name, const GlassValue *val, Map *globals, GlassInstance *inst, Map *locals) {
+void set_var(const String *name, const GlassValue *val, Map *globals, GlassInstance inst, Map *locals) {
     switch (get_var_scope(name)) {
         case SCOPE_LOCAL:
             map_set(locals, name, val);
@@ -540,7 +540,7 @@ void set_var(const String *name, const GlassValue *val, Map *globals, GlassInsta
 
 int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map *classes) {
     const GlassFunction *func = instance_get_func(func_val->inst, func_val->str);
-    GlassInstance *inst = func_val->inst;
+    GlassInstance inst = func_val->inst;
 
     Map *local_vars = new_map(STRING_HASH_OPS, VALUE_COPY_OPS);
 
@@ -705,7 +705,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                     free_map(local_vars);
                     return 1;
                 }
-                GlassInstance *new_inst = new_glass_instance(gclass);
+                GlassInstance new_inst = new_glass_instance(gclass);
                 String *ctor_name = string_from_chars("c__");
                 int ctor_ret = 0;
                 if (instance_has_func(new_inst, ctor_name)) {
@@ -792,7 +792,9 @@ int run_interpreter(const Map *classes) {
     Map *globals = new_map(STRING_HASH_OPS, VALUE_COPY_OPS);
     int ret_val = 0;
 
-    GlassInstance *main_inst = new_glass_instance(main_class);
+    init_instances();
+
+    GlassInstance main_inst = new_glass_instance(main_class);
     String *ctor_name = string_from_chars("c__");
     if (instance_has_func(main_inst, ctor_name)) {
         GlassValue *ctor_val = new_func_value(main_inst, ctor_name);
@@ -811,6 +813,8 @@ int run_interpreter(const Map *classes) {
     free_map(globals);
     free_list(stack);
     free_string(main_func_name);
+
+    free_instances();
 
     return ret_val;
 }
