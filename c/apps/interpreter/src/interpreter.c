@@ -437,6 +437,27 @@ int execute_builtin(BuiltinFunc func, List *stack) {
             break;
         }
 
+        case BUILTIN_STR_SPLIT: {
+            if (check_stack(stack, "S.d", 2, ARG_STR, ARG_INT)) {
+                return 1;
+            }
+            GlassValue *idx_val = list_pop(stack);
+            GlassValue *str_val = list_pop(stack);
+            String *substr1 = string_substr(str_val->str, 0, (size_t) idx_val->num);
+            String *substr2 = string_substr(str_val->str, (size_t) idx_val->num, string_len(str_val->str));
+            GlassValue *substr_val1 = new_str_value(substr1);
+            GlassValue *substr_val2 = new_str_value(substr2);
+            list_add(stack, substr_val1);
+            list_add(stack, substr_val2);
+            free_glass_value(idx_val);
+            free_glass_value(str_val);
+            free_glass_value(substr_val1);
+            free_glass_value(substr_val2);
+            free_string(substr1);
+            free_string(substr2);
+            break;
+        }
+
         case BUILTIN_STR_STR_TO_NUM: {
             if (check_stack(stack, "S.sn", 1, ARG_CHAR)) {
                 return 1;

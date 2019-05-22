@@ -23,6 +23,8 @@ String *string_from_chars(const char *chars);
 // Returns a copy of the given string
 String *copy_string(const String *str);
 
+String *string_substr(const String *str, size_t index, size_t len);
+
 // Frees the memory associated with a string
 void free_string(String *str);
 

@@ -53,6 +53,18 @@ String *copy_string(const String *str) {
     return copy;
 }
 
+String *string_substr(const String *str, size_t index, size_t len) {
+    String *substr = malloc(sizeof(String));
+    substr->len = len < str->len - index ? len : str->len - index;
+    substr->alloc = STR_INIT_ALLOC;
+    while (substr->len > substr->alloc) {
+        substr->alloc *= 2;
+    }
+    substr->buf = malloc(sizeof(char) * substr->alloc);
+    memcpy(substr->buf, str->buf + index, substr->len);
+    return substr;
+}
+
 void free_string(String *str) {
     free(str->buf);
     free(str);

@@ -26,8 +26,21 @@ int main() {
     ASSERT_EQUAL(strlen(string_get_c_str(str)), 23);
     ASSERT_FALSE(strcmp(string_get_c_str(str), "XHowdy!0123456789abcdef"));
 
+    String *str3 = string_from_chars("abcdefghijklmnopqrstuvwxyz");
+    
+    String *sub1 = string_substr(str3, 0, 32);
+    ASSERT_EQUAL(string_len(sub1), 26);
+    ASSERT_FALSE(memcmp(string_data(sub1), "abcdefghijklmnopqrstuvwxyz", 26));
+
+    String *sub2 = string_substr(str3, 10, 10);
+    ASSERT_EQUAL(string_len(sub2), 10);
+    ASSERT_FALSE(memcmp(string_data(sub2), "klmnopqrst", 10));
+
     free_string(str);
     free_string(str2);
+    free_string(str3);
+    free_string(sub1);
+    free_string(sub2);
 
     return test_status();
 }
