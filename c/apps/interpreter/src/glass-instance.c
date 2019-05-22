@@ -44,7 +44,7 @@ static void do_garbage_collection(void) {
         GlassInstImpl *new_insts = calloc(alloc_insts * 2, sizeof(GlassInstImpl));
         memcpy(new_insts, inst_array, sizeof(GlassInstImpl) * alloc_insts);
         free(inst_array);
-        inst_array = new_insts;        
+        inst_array = new_insts;
         alloc_insts *= 2;
     }
     cur_inst = 0;
@@ -69,6 +69,19 @@ GlassInstance new_glass_instance(const GlassClass *gclass) {
     inst->ref_count = 1;
     used_insts++;
     return index;
+}
+
+GlassInstance copy_glass_instance(GlassInstance inst) {
+    inst_array[inst].ref_count++;
+    return inst;
+}
+
+void release_glass_instance(GlassInstance inst) {
+    inst_array[inst].ref_count--;
+    if (inst_array[inst].ref_count == 0) {
+        free_map(inst_array[inst].vars);
+        used_insts--;
+    }
 }
 
 bool instance_has_var(const GlassInstance inst, const String *name) {

@@ -719,6 +719,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                 }
                 GlassValue *inst_val = new_inst_value(new_inst);
                 set_var(oname_val->str, inst_val, globals, inst, local_vars);
+                release_glass_instance(new_inst);
                 free_glass_value(inst_val);
                 free_string(ctor_name);
                 break;

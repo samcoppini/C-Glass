@@ -16,14 +16,14 @@ static GlassValue *new_glass_value(ValueType type) {
 
 GlassValue *new_func_value(GlassInstance inst, const String *name) {
     GlassValue *val = new_glass_value(VALUE_FUNCTION);
-    val->inst = inst;
+    val->inst = copy_glass_instance(inst);
     val->str = copy_string(name);
     return val;
 }
 
 GlassValue *new_inst_value(GlassInstance inst) {
     GlassValue *val = new_glass_value(VALUE_INSTANCE);
-    val->inst = inst;
+    val->inst = copy_glass_instance(inst);
     return val;
 }
 
@@ -50,11 +50,11 @@ GlassValue *copy_glass_value(const GlassValue *value) {
 
     switch (value->type) {
         case VALUE_INSTANCE:
-            copy->inst = value->inst;
+            copy->inst = copy_glass_instance(value->inst);
             break;
         
         case VALUE_FUNCTION:
-            copy->inst = value->inst;
+            copy->inst = copy_glass_instance(value->inst);
             copy->str = copy_string(value->str);
             break;
 
@@ -73,7 +73,15 @@ GlassValue *copy_glass_value(const GlassValue *value) {
 
 void free_glass_value(GlassValue *value) {
     switch (value->type) {
+        case VALUE_INSTANCE:
+            release_glass_instance(value->inst);
+            break;
+
         case VALUE_FUNCTION:
+            release_glass_instance(value->inst);
+            free_string(value->str);
+            break;
+
         case VALUE_STRING:
         case VALUE_NAME:
             free_string(value->str);
@@ -160,7 +168,6 @@ String *value_get_string(const GlassValue *val) {
             return string_from_chars("<unknown>");
     }
 }
-
 
 void *copy_glass_value_generic(const void *val) {
     return copy_glass_value(val);

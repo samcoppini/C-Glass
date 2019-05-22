@@ -16,6 +16,10 @@ void free_instances(void);
 
 GlassInstance new_glass_instance(const struct GlassClass *gclass);
 
+GlassInstance copy_glass_instance(GlassInstance inst);
+
+void release_glass_instance(GlassInstance inst);
+
 bool instance_has_var(const GlassInstance inst, const struct String *name);
 
 bool instance_has_func(const GlassInstance inst, const struct String *name);
