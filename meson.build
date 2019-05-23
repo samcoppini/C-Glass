@@ -9,4 +9,8 @@ if cc.has_argument('-Wshadow')
     add_project_arguments('-Wshadow', language : 'c')
 endif
 
+py_mod = import('python3')
+python = py_mod.find_python()
+
 subdir('c')
+subdir('glass')

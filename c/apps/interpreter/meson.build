@@ -7,7 +7,7 @@ interpreter_src = files(
     'src/main.c',
 )
 
-interpreter = executable(
+interpreter_exe = executable(
     'cglass',
     interpreter_src,
     dependencies: [glasstypes_dep, parser_dep, utils_dep],

@@ -1,0 +1,46 @@
+{(Output)
+    [(onl)
+        (_o)O!
+        (_o)(on).?
+        "\n"(_o)o.?
+    ]
+
+    [(ol)
+        (_o)O!
+        (_o)o.?
+        "\n"(_o)o.?
+    ]
+}
+
+{M
+    [m
+        (_s)S!
+        (_o)(Output)!
+
+        "Testing S.l"(_o)(ol).?
+        "This is 26 characters long"(_s)l.?(_o)(onl).?
+
+        "Testing S.i"(_o)(ol).?
+        "ABCDEF"<0>(_s)i.?(_o)(ol).?
+        "ABCDEF"<3>(_s)i.?(_o)(ol).?
+
+        "Testing S.si"(_o)(ol).?
+        "Words"<1>"a"(_s)(si).?(_o)(ol).?
+
+        "Testing S.a"(_o)(ol).?
+        "Hello ""World"(_s)a.?(_o)(ol).?
+
+        "Testing S.d"(_o)(ol).?
+        "Underground"<5>(_s)d.?(_o)(ol).?(_o)(ol).?
+
+        "Testing S.e"(_o)(ol).?
+        "Foo""Fooo"(_s)e.?(_o)(onl).?
+        "Foo""Foo"(_s)e.?(_o)(onl).?
+
+        "Testing S.ns"(_o)(ol).?
+        <33>(_s)(ns).?(_o)(ol).?
+
+        "Testing S.sn"(_o)(ol).?
+        "!"(_s)(sn).?(_o)(onl).?
+    ]
+}
