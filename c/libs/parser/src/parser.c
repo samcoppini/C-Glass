@@ -367,7 +367,6 @@ Map *classes_from_files(List *filenames, bool include_builtins) {
     for (size_t i = 0; i < list_len(filenames); i++) {
         String *str = list_get_mutable(filenames, i);
         FILE *fp = fopen(string_get_c_str(str), "r");
-        free_string(str);
 
         if (fp == NULL) {
             fprintf(stderr, "Unable to open %s!\n", string_get_c_str(str));
