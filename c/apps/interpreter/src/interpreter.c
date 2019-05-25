@@ -64,6 +64,7 @@ bool check_stack(const List *stack, const char *op_name, size_t size, ...) {
     if (list_len(stack) < size) {
         fprintf(stderr, "Error! %s requires %u elements on the stack, but the stack only has %u elements!\n",
                 op_name, (unsigned) size, (unsigned) list_len(stack));
+        fprintf(stderr, "Stack trace:\n");
         return true;
     }
 
@@ -168,7 +169,7 @@ int execute_builtin(BuiltinFunc func, List *stack) {
         }
 
         case BUILTIN_MATH_ADD: {
-            if (check_stack(stack, "A.a", 1, ARG_NUM)) {
+            if (check_stack(stack, "A.a", 2, ARG_NUM, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val1 = list_pop(stack);
@@ -181,7 +182,7 @@ int execute_builtin(BuiltinFunc func, List *stack) {
         }
 
         case BUILTIN_MATH_DIVIDE: {
-            if (check_stack(stack, "A.d", 1, ARG_NUM)) {
+            if (check_stack(stack, "A.d", 2, ARG_NUM, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val1 = list_pop(stack);
@@ -194,7 +195,7 @@ int execute_builtin(BuiltinFunc func, List *stack) {
         }
 
         case BUILTIN_MATH_EQUAL: {
-            if (check_stack(stack, "A.e", 1, ARG_NUM)) {
+            if (check_stack(stack, "A.e", 2, ARG_NUM, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val1 = list_pop(stack);
@@ -538,6 +539,25 @@ void set_var(const String *name, const GlassValue *val, Map *globals, GlassInsta
     }
 }
 
+void output_stack_trace_line(const GlassValue *func_val, const GlassCommand *cmd) {
+    const GlassClass *gclass = instance_get_class(func_val->inst);
+
+    String *class_name = copy_string(class_get_name(gclass));
+    String *func_name = copy_string(func_val->str);
+    String *file_name = copy_string(cmd->filename);
+
+    fprintf(stderr,
+            "    %s.%s on line %u, column %u of '%s'\n",
+            string_get_c_str(class_name),
+            string_get_c_str(func_name),
+            cmd->line, cmd->col,
+            string_get_c_str(file_name));
+
+    free_string(class_name);
+    free_string(func_name);
+    free_string(file_name);
+}
+
 int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map *classes) {
     const GlassFunction *func = instance_get_func(func_val->inst, func_val->str);
     GlassInstance inst = func_val->inst;
@@ -549,6 +569,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
         switch (cmd->type) {
             case CMD_ASSIGN_SELF: {
                 if (check_stack(stack, "$", 1, ARG_NAME)) {
+                    output_stack_trace_line(func_val, cmd);
                     free_map(local_vars);
                     return 1;
                 }
@@ -562,6 +583,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
 
             case CMD_ASSIGN_VAL: {
                 if (check_stack(stack, "=", 2, ARG_NAME, ARG_ANY)) {
+                    output_stack_trace_line(func_val, cmd);
                     free_map(local_vars);
                     return 1;
                 }
@@ -576,6 +598,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
             case CMD_BUILTIN: {
                 int ret = execute_builtin(cmd->builtin, stack);
                 if (ret != 0) {
+                    output_stack_trace_line(func_val, cmd);
                     free_map(local_vars);
                     return ret;
                 }
@@ -585,6 +608,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
             case CMD_DUPLICATE: {
                 if (list_len(stack) <= cmd->index) {
                     fprintf(stderr, "Cannot duplicate out-of-range stack element!\n");
+                    output_stack_trace_line(func_val, cmd);
                     free_map(local_vars);
                     return 1;
                 }
@@ -595,6 +619,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
 
             case CMD_GET_FUNC: {
                 if (check_stack(stack, ".", 2, ARG_NAME, ARG_NAME)) {
+                    output_stack_trace_line(func_val, cmd);
                     free_map(local_vars);
                     return 1;
                 }
@@ -602,25 +627,28 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                 GlassValue *oname_val = list_pop(stack);
                 const GlassValue *obj_val = get_var(oname_val->str, globals, inst, local_vars);
                 if (obj_val == NULL) {
-                    fprintf(stderr, "Error! %s not defined!\n",
+                    fprintf(stderr, "Error! %s not defined!\nStack trace:\n",
                             string_get_c_str(oname_val->str));
+                    output_stack_trace_line(func_val, cmd);
                     free_glass_value(fname_val);
                     free_glass_value(oname_val);
                     free_map(local_vars);
                     return 1;
                 }
                 else if (obj_val->type != VALUE_INSTANCE) {
-                    fprintf(stderr, "Error! %s is not an instance of a class.",
+                    fprintf(stderr, "Error! %s is not an instance of a class.\nStack trace:\n",
                             string_get_c_str(oname_val->str));
+                    output_stack_trace_line(func_val, cmd);
                     free_glass_value(fname_val);
                     free_glass_value(oname_val);
                     free_map(local_vars);
                     return 1;
                 }
                 else if (!instance_has_func(obj_val->inst, fname_val->str)) {
-                    fprintf(stderr, "Error! %s has no %s function!\n",
+                    fprintf(stderr, "Error! %s has no %s function!\nStack trace:\n",
                             string_get_c_str(oname_val->str),
                             string_get_c_str(fname_val->str));
+                    output_stack_trace_line(func_val, cmd);
                     free_glass_value(fname_val);
                     free_glass_value(oname_val);
                     free_map(local_vars);
@@ -634,14 +662,16 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
 
             case CMD_GET_VAL: {
                 if (check_stack(stack, "*", 1, ARG_NAME)) {
+                    output_stack_trace_line(func_val, cmd);
                     free_map(local_vars);
                     return 1;
                 }
                 GlassValue *name_val = list_pop(stack);
                 const GlassValue *val = get_var(name_val->str, globals, inst, local_vars);
                 if (val == NULL) {
-                    fprintf(stderr, "Error! %s is not defined!\n",
+                    fprintf(stderr, "Error! %s is not defined!\nStack trace:\n",
                             string_get_c_str(name_val->str));
+                    output_stack_trace_line(func_val, cmd);
                     free_map(local_vars);
                     return 1;
                 }
@@ -652,6 +682,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
 
             case CMD_EXECUTE_FUNC: {
                 if (check_stack(stack, "?", 1, ARG_FUNC)) {
+                    output_stack_trace_line(func_val, cmd);
                     free_map(local_vars);
                     return 1;
                 }
@@ -659,6 +690,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                 int ret = execute_function(new_func, stack, globals, classes);
                 free_glass_value(new_func);
                 if (ret != 0) {
+                    output_stack_trace_line(func_val, cmd);
                     return ret;
                 }
                 break;
@@ -667,7 +699,8 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
             case CMD_LOOP_BEGIN: {
                 const GlassValue *val = get_var(cmd->str, globals, inst, local_vars);
                 if (val == NULL) {
-                    fprintf(stderr, "Error! %s is undefined!\n", string_get_c_str(cmd->str));
+                    fprintf(stderr, "Error! %s is undefined!\nStack trace:\n", string_get_c_str(cmd->str));
+                    output_stack_trace_line(func_val, cmd);
                     free_map(local_vars);
                     return 1;
                 }
@@ -680,7 +713,8 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
             case CMD_LOOP_END: {
                 const GlassValue *val = get_var(cmd->str, globals, inst, local_vars);
                 if (val == NULL) {
-                    fprintf(stderr, "Error! %s is undefined!\n", string_get_c_str(cmd->str));
+                    fprintf(stderr, "Error! %s is undefined!\nStack trace:\n", string_get_c_str(cmd->str));
+                    output_stack_trace_line(func_val, cmd);
                     free_map(local_vars);
                     return 1;
                 }
@@ -692,14 +726,17 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
 
             case CMD_NEW_INST: {
                 if (check_stack(stack, "!", 2, ARG_NAME, ARG_NAME)) {
+                    output_stack_trace_line(func_val, cmd);
+                    free_map(local_vars);
                     return 1;
                 }
                 GlassValue *cname_val = list_pop(stack);
                 GlassValue *oname_val = list_pop(stack);
                 const GlassClass *gclass = map_get(classes, cname_val->str);
                 if (gclass == NULL) {
-                    fprintf(stderr, "Error! (%s) is not a class!\n",
+                    fprintf(stderr, "Error! (%s) is not a class!\nStack trace:\n",
                             string_get_c_str(cname_val->str));
+                    output_stack_trace_line(func_val, cmd);
                     free_glass_value(cname_val);
                     free_glass_value(oname_val);
                     free_map(local_vars);
@@ -714,6 +751,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                     free_glass_value(ctor_val);
                 }
                 if (ctor_ret != 0) {
+                    output_stack_trace_line(func_val, cmd);
                     free_map(local_vars);
                     return 1;
                 }
@@ -727,6 +765,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
 
             case CMD_POP_STACK: {
                 if (check_stack(stack, ",", 1, ARG_ANY)) {
+                    output_stack_trace_line(func_val, cmd);
                     free_map(local_vars);
                     return 1;
                 }
