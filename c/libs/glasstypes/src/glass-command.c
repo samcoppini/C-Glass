@@ -7,6 +7,9 @@
 void *copy_command(const GlassCommand *cmd) {
     GlassCommand *copy = malloc(sizeof(GlassCommand));
     copy->type = cmd->type;
+    copy->filename = copy_string(cmd->filename);
+    copy->line = cmd->line;
+    copy->col = cmd->col;
 
     switch (cmd->type) {
         case CMD_DUPLICATE:
@@ -52,6 +55,7 @@ void free_command(GlassCommand *cmd) {
             break;
     }
 
+    free_string(cmd->filename);
     free(cmd);
 }
 

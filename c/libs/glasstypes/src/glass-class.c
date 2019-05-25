@@ -11,6 +11,10 @@ struct GlassClass {
     String *name;
 
     Map *funcs;
+
+    String *filename;
+
+    unsigned line, col;
 };
 
 struct GlassClassBuilder {
@@ -21,14 +25,22 @@ GlassClass *copy_glass_class(const GlassClass *gclass) {
     GlassClass *copy = malloc(sizeof(GlassClass));
     copy->name = copy_string(gclass->name);
     copy->funcs = copy_map(gclass->funcs);
+    copy->filename = copy_string(gclass->filename);
+    copy->line = gclass->line;
+    copy->col = gclass->col;
     return copy;
 }
 
-GlassClassBuilder *new_class_builder(const String *name) {
+GlassClassBuilder *new_class_builder(const String *name, const String *filename,
+                                     unsigned line, unsigned col)
+{
     GlassClassBuilder *builder = malloc(sizeof(GlassClassBuilder));
     builder->gclass = malloc(sizeof(GlassClass));
     builder->gclass->name = copy_string(name);
     builder->gclass->funcs = new_map(STRING_HASH_OPS, FUNC_COPY_OPS);
+    builder->gclass->filename = copy_string(filename);
+    builder->gclass->line = line;
+    builder->gclass->col = col;
     return builder;
 }
 

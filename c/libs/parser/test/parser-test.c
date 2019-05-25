@@ -10,6 +10,7 @@
 Map *get_classes(const char *chars) {
     String *str = string_from_chars(chars);
     Stream *stream = stream_from_string(str);
+    stream_set_name(stream, str);
 
     Map *classes = parse_classes(stream);
 
@@ -50,7 +51,7 @@ int main() {
         free_map(classes);
     }
 
-    classes = get_classes("  {    M    [   m   ]   }    ");
+    classes = get_classes("  {    M    [   m   /  (_m)  \\  ]   }    ");
     if (ASSERT_NOT_NULL(classes)) {
         ASSERT_EQUAL(map_size(classes), 1);
         if (ASSERT_TRUE(map_has(classes, capital_m))) {
@@ -124,6 +125,10 @@ int main() {
     ASSERT_NULL(get_classes("{M[m/(_name]}"));
     ASSERT_NULL(get_classes("{M[m/(_name)]}"));
     ASSERT_NULL(get_classes("{M[m\\]}"));
+    ASSERT_NULL(get_classes("{M[m($)]}"));
+    ASSERT_NULL(get_classes("{M[m(n$)]}"));
+    ASSERT_NULL(get_classes("{M[m(0$)]}"));
+    ASSERT_NULL(get_classes("{M[m\"]}"));
 
     return test_status();
 }

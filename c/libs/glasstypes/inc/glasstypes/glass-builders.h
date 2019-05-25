@@ -10,9 +10,13 @@ struct GlassCommand;
 struct GlassFunction;
 struct String;
 
-GlassClassBuilder *new_class_builder(const struct String *name);
+GlassClassBuilder *new_class_builder(const struct String *name,
+                                     const struct String *filename,
+                                     unsigned line, unsigned col);
 
-GlassFuncBuilder *new_func_builder(const struct String *name);
+GlassFuncBuilder *new_func_builder(const struct String *name,
+                                   const struct String *filename,
+                                   unsigned line, unsigned col);
 
 void free_class_builder(GlassClassBuilder *builder);
 
@@ -24,10 +28,6 @@ struct GlassFunction *build_glass_function(const GlassFuncBuilder *builder);
 
 bool builder_add_func(GlassClassBuilder *builder, const struct GlassFunction *func);
 
-void builder_add_command(GlassFuncBuilder *builder, const struct GlassCommand *cmd);
-
-void builder_start_loop(GlassFuncBuilder *builder, const struct String *name);
-
-bool builder_end_loop(GlassFuncBuilder *builder);
+bool builder_add_command(GlassFuncBuilder *builder, const struct GlassCommand *cmd);
 
 #endif

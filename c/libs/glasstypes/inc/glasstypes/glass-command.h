@@ -23,7 +23,6 @@ typedef enum CommandType {
     CMD_RETURN,       // ^
 
     CMD_BUILTIN,
-    CMD_NOP,
 } CommandType;
 
 typedef enum BuiltinFunc {
@@ -58,6 +57,12 @@ typedef enum BuiltinFunc {
 
 typedef struct GlassCommand {
     CommandType type;
+
+    struct String *filename;
+
+    unsigned line;
+
+    unsigned col;
 
     union {
         struct {

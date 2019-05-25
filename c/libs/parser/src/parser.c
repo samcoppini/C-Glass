@@ -12,6 +12,23 @@
 #include <math.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <stdarg.h>
+
+void parser_error(const Stream *stream, const char *msg, ...) {
+    String *name = copy_string(stream_get_name(stream));
+
+    fprintf(stderr, "Error in %s on line %u, column %u:\n    ",
+                    string_get_c_str(name),
+                    stream_get_line(stream),
+                    stream_get_col(stream));
+    
+    va_list args;
+    va_start(args, msg);
+    vfprintf(stderr, msg, args);
+    va_end(args);
+
+    fprintf(stderr, "\n");
+}
 
 static bool skip_whitespace(Stream *stream) {
     while (!stream_ended(stream)) {
@@ -47,6 +64,11 @@ static String *parse_name(Stream *stream) {
         c = stream_get_char(stream);
 
         while (!stream_ended(stream) && c != ')') {
+            if (!isalnum(c) && c != '_') {
+                parser_error(stream, "Invalid char '%c' encountered in the middle of a name.", c);
+                free_string(name);
+                return NULL;
+            }
             string_add_char(name, c);
             c = stream_get_char(stream);
         }
@@ -54,6 +76,7 @@ static String *parse_name(Stream *stream) {
         return name;
     }
     else {
+        parser_error(stream, "Invalid char '%c' encountered when expecting a name.", c);
         stream_unget(stream);
         return NULL;
     }
@@ -73,6 +96,7 @@ static bool parse_parenthesized(Stream *stream, GlassCommand *cmd) {
         c = stream_get_char(stream);
         while (c != ')' && !stream_ended(stream)) {
             if (!isalnum(c) && c != '_') {
+                parser_error(stream, "Unexpected '%c' encountered while parsing name.", c);
                 return true;
             }
             string_add_char(cmd->str, c);
@@ -80,6 +104,7 @@ static bool parse_parenthesized(Stream *stream, GlassCommand *cmd) {
         }
 
         if (c != ')') {
+            parser_error(stream, "File ended unexpectedly while parsing name.");
             free_string(cmd->str);
             return true;
         }
@@ -93,6 +118,7 @@ static bool parse_parenthesized(Stream *stream, GlassCommand *cmd) {
 
         while (c != ')' && !stream_ended(stream)) {
             if (!isdigit(c)) {
+                parser_error(stream, "Expected a digit, encountered '%c", c);
                 return true;
             }
             cmd->index = (cmd->index * 10) + c - '0';
@@ -100,6 +126,7 @@ static bool parse_parenthesized(Stream *stream, GlassCommand *cmd) {
         }
 
         if (c != ')') {
+            parser_error(stream, "File ended unexpectedly while parsing dup expression.");
             return true;
         }
 
@@ -122,6 +149,7 @@ static bool parse_quoted(Stream *stream, GlassCommand *cmd) {
     while (c != '"' && !stream_ended(stream)) {
         if (c == '\\') {
             if (stream_ended(stream)) {
+                parser_error(stream, "File ended uexpectedly in the middle of a string!");
                 free_string(cmd->str);
                 return true;
             }
@@ -138,6 +166,7 @@ static bool parse_quoted(Stream *stream, GlassCommand *cmd) {
     }
 
     if (c != '"') {
+        parser_error(stream, "File ended uexpectedly in the middle of a string!");
         free_string(cmd->str);
         return true;
     }
@@ -174,18 +203,24 @@ static GlassFunction *parse_function(Stream *stream) {
     char c = stream_get_char(stream);
     assert(c == '[');
 
+    unsigned line = stream_get_line(stream);
+    unsigned col = stream_get_col(stream);
+
     String *name = parse_name(stream);
     if (name == NULL) {
         return NULL;
     }
 
-    GlassFuncBuilder *builder = new_func_builder(name);
+    GlassFuncBuilder *builder = new_func_builder(name, stream_get_name(stream), line, col);
     free_string(name);
 
     skip_whitespace(stream);
     c = stream_get_char(stream);
     while (!stream_ended(stream) && c != ']') {
-        GlassCommand cmd = { .type = CMD_NOP };
+        GlassCommand cmd;
+        cmd.filename = copy_string(stream_get_name(stream));
+        cmd.line = stream_get_line(stream);
+        cmd.col = stream_get_col(stream);
 
         switch (c) {
             case '.':
@@ -234,18 +269,15 @@ static GlassFunction *parse_function(Stream *stream) {
                 }
                 break;
             case '/':
-                name = parse_name(stream);
-                if (name == NULL) {
+                cmd.type = CMD_LOOP_BEGIN;
+                cmd.str = parse_name(stream);
+                if (cmd.str == NULL) {
                     free_func_builder(builder);
                     return NULL;
                 }
-                builder_start_loop(builder, name);
-                free_string(name);
                 break;
             case '\\':
-                if (builder_end_loop(builder)) {
-                    return NULL;
-                }
+                cmd.type = CMD_LOOP_END;
                 break;
             default:
                 if (isalpha(c)) {
@@ -257,19 +289,26 @@ static GlassFunction *parse_function(Stream *stream) {
                     cmd.index = c - '0';
                 }
                 else {
+                    parser_error(stream, "Invalid char %c encountered!", c);
                     free_func_builder(builder);
                     return NULL;
                 }
                 break;
         }
 
-        if (cmd.type != CMD_NOP) {
-            builder_add_command(builder, &cmd);
+        if (builder_add_command(builder, &cmd)) {
+            // The only way adding a command can fail is if it's a loop ending
+            // that doesn't match with a loop beginning, so we can put this error
+            // message here
+            parser_error(stream, "Encountered a '\\' without a matching '/'.");
+            return NULL;
         }
 
-        if (cmd.type == CMD_PUSH_NAME  || cmd.type == CMD_PUSH_STR) {
+        if (cmd.type == CMD_PUSH_NAME  || cmd.type == CMD_PUSH_STR || cmd.type == CMD_LOOP_BEGIN) {
             free_string(cmd.str);
         }
+
+        free_string(cmd.filename);
 
         skip_whitespace(stream);
         c = stream_get_char(stream);
@@ -281,6 +320,10 @@ static GlassFunction *parse_function(Stream *stream) {
     }
 
     GlassFunction *func = build_glass_function(builder);
+    if (func == NULL) {
+        // The only way the building can fail is if there's a unclosed loop
+        parser_error(stream, "Loop not closed before function ended!");
+    }
     free_func_builder(builder);
     return func;
 }
@@ -289,12 +332,15 @@ static GlassClass *parse_class(Stream *stream) {
     char c = stream_get_char(stream);
     assert(c == '{');
 
+    unsigned line = stream_get_line(stream);
+    unsigned col = stream_get_col(stream);
+
     String *name = parse_name(stream);
     if (name == NULL) {
         return NULL;
     }
 
-    GlassClassBuilder *builder = new_class_builder(name);
+    GlassClassBuilder *builder = new_class_builder(name, stream_get_name(stream), line, col);
     free_string(name);
 
     skip_whitespace(stream);
@@ -313,6 +359,7 @@ static GlassClass *parse_class(Stream *stream) {
             }
         }
         else if (c != '}') {
+            parser_error(stream, "Error! Unexpected char %c in a class definition!", c);
             free_class_builder(builder);
             return NULL;
         }
@@ -346,6 +393,7 @@ Map *parse_classes(Stream *stream) {
             free_glass_class(gclass);
         }
         else {
+            parser_error(stream, "Unexpected char '%c' encountered when expecting '{'.", c);
             free_map(classes);
             return NULL;
         }
@@ -365,16 +413,17 @@ Map *classes_from_files(List *filenames, bool include_builtins) {
     }
 
     for (size_t i = 0; i < list_len(filenames); i++) {
-        String *str = list_get_mutable(filenames, i);
-        FILE *fp = fopen(string_get_c_str(str), "r");
+        String *filename = list_get_mutable(filenames, i);
+        FILE *fp = fopen(string_get_c_str(filename), "r");
 
         if (fp == NULL) {
-            fprintf(stderr, "Unable to open %s!\n", string_get_c_str(str));
+            fprintf(stderr, "Unable to open %s!\n", string_get_c_str(filename));
             free_map(classes);
             return NULL;
         }
 
         Stream *file_stream = stream_from_file(fp);
+        stream_set_name(file_stream, filename);
         fclose(fp);
 
         Map *new_classes = parse_classes(file_stream);

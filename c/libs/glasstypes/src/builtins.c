@@ -61,13 +61,14 @@ const BuiltinInfo BUILTIN_CLASS_INFO[NUM_BUILTIN_CLASSES] = {
 };
 
 Map *get_builtin_classes(void) {
+    String *builtin_name = string_from_chars("<builtin>");
     Map *classes = new_map(STRING_HASH_OPS, CLASS_COPY_OPS);
 
     for (size_t i = 0; i < NUM_BUILTIN_CLASSES; i++) {
         BuiltinInfo builtin_class = BUILTIN_CLASS_INFO[i];
 
         String *class_name = string_from_chars(builtin_class.class_name);
-        GlassClassBuilder *class_builder = new_class_builder(class_name);
+        GlassClassBuilder *class_builder = new_class_builder(class_name, builtin_name, 0, 0);
 
         for (size_t j = 0; j < MAX_BUILTIN_FUNCS; j++) {
             BuiltinFuncInfo func_info = builtin_class.funcs[j];
@@ -77,8 +78,14 @@ Map *get_builtin_classes(void) {
             }
 
             String *func_name = string_from_chars(func_info.func_name);
-            GlassFuncBuilder *func_builder = new_func_builder(func_name);
-            GlassCommand cmd = { CMD_BUILTIN, .builtin = func_info.builtin_func };
+            GlassFuncBuilder *func_builder = new_func_builder(func_name, builtin_name, 0, 0);
+
+            GlassCommand cmd = {
+                .type = CMD_BUILTIN,
+                .filename = builtin_name,
+                .line = 0, .col = 0,
+                .builtin = func_info.builtin_func,
+            };
 
             builder_add_command(func_builder, &cmd);
             GlassFunction *func = build_glass_function(func_builder);
@@ -96,6 +103,8 @@ Map *get_builtin_classes(void) {
         free_class_builder(class_builder);
         free_glass_class(gclass);
     }
+
+    free_string(builtin_name);
 
     return classes;
 }
