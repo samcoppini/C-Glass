@@ -8,18 +8,34 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 typedef struct Options {
     List *files;
+
+    List *args;
 } Options;
 
 bool parse_command_line(Options *opts, int argc, char **argv) {
     opts->files = new_list(STRING_COPY_OPS);
+    opts->args = new_list(STRING_COPY_OPS);
+
+    bool collecting_args = false;
 
     for (int i = 1; i < argc; i++) {
+        if (!collecting_args && strcmp(argv[i], "--") == 0) {
+            collecting_args = true;
+            continue;
+        }
+
         String *str = string_from_chars(argv[i]);
 
-        list_add(opts->files, str);
+        if (!collecting_args) {
+            list_add(opts->files, str);
+        }
+        else {
+            list_add(opts->args, str);
+        }
 
         free_string(str);
     }
@@ -29,6 +45,7 @@ bool parse_command_line(Options *opts, int argc, char **argv) {
 
 void free_options(Options *opts) {
     free_list(opts->files);
+    free_list(opts->args);
 }
 
 int main(int argc, char **argv) {
@@ -43,7 +60,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    int ret_code = run_interpreter(classes);
+    int ret_code = run_interpreter(classes, opts.args);
     free_options(&opts);
     free_map(classes);
 

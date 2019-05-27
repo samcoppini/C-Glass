@@ -26,24 +26,40 @@ typedef enum ArgType {
     ARG_ANY,
     ARG_CHAR,
     ARG_FUNC,
+    ARG_IN_FILE,
     ARG_INST,
     ARG_INT,
     ARG_NAME,
     ARG_NUM,
+    ARG_OUT_FILE,
     ARG_STR,
 } ArgType;
 
+typedef struct InterpreterState {
+    const Map *classes;
+
+    List *stack;
+
+    Map *global_vars;
+
+    const List *args;
+
+    unsigned cur_arg;
+} InterpreterState;
+
 const char *arg_name_str(ArgType type) {
     switch (type) {
-        case ARG_ANY:  return "any";
-        case ARG_CHAR: return "character";
-        case ARG_FUNC: return "function";
-        case ARG_INT:  return "integer";
-        case ARG_INST: return "instance";
-        case ARG_NAME: return "name";
-        case ARG_NUM:  return "number";
-        case ARG_STR:  return "string";
-        default:       return "unknown";
+        case ARG_ANY:      return "any";
+        case ARG_CHAR:     return "character";
+        case ARG_FUNC:     return "function";
+        case ARG_IN_FILE:  return "input-file";
+        case ARG_INT:      return "integer";
+        case ARG_INST:     return "instance";
+        case ARG_NAME:     return "name";
+        case ARG_NUM:      return "number";
+        case ARG_OUT_FILE: return "output-file";
+        case ARG_STR:      return "string";
+        default:           return "unknown";
     }
 }
 
@@ -92,7 +108,11 @@ bool check_stack(const List *stack, const char *op_name, size_t size, ...) {
             case ARG_FUNC:
                 types_matched &= (val->type == VALUE_FUNCTION);
                 break;
-            
+
+            case ARG_IN_FILE:
+                types_matched &= (val->type == VALUE_INPUT_FILE);
+                break;
+
             case ARG_INST:
                 types_matched &= (val->type == VALUE_INSTANCE);
                 break;
@@ -108,6 +128,10 @@ bool check_stack(const List *stack, const char *op_name, size_t size, ...) {
             
             case ARG_NUM:
                 types_matched &= (val->type == VALUE_NUMBER);
+                break;
+            
+            case ARG_OUT_FILE:
+                types_matched &= (val->type == VALUE_OUTPUT_FILE);
                 break;
 
             case ARG_STR:
@@ -129,15 +153,40 @@ bool check_stack(const List *stack, const char *op_name, size_t size, ...) {
             fprintf(stderr, " %s", string_get_c_str(str));
             free_string(str);
         }
-        fprintf(stderr, "\n");
+        fprintf(stderr, "\nStack trace:\n");
         return true;
     }
 
     return false;
 }
 
-int execute_builtin(BuiltinFunc func, List *stack) {
+int execute_builtin(BuiltinFunc func, InterpreterState *state) {
+    List *stack = state->stack;
+
     switch (func) {
+        case BUILTIN_INPUT_ARG_COUNT: {
+            GlassValue *val = new_number_value(list_len(state->args));
+            list_add(stack, val);
+            free_glass_value(val);
+            break;
+        }
+
+        case BUILTIN_INPUT_ARGUMENT: {
+            String *str;
+            if (state->cur_arg >= list_len(state->args)) {
+                str = new_string();
+            }
+            else {
+                str = copy_string(list_get(state->args, state->cur_arg));
+            }
+            GlassValue *val = new_str_value(str);
+            list_add(stack, val);
+            state->cur_arg++;
+            free_glass_value(val);
+            free_string(str);
+            break;
+        }
+
         case BUILTIN_INPUT_CHAR: {
             String *str = string_from_char(getchar());
             GlassValue *val = new_str_value(str);
@@ -147,11 +196,59 @@ int execute_builtin(BuiltinFunc func, List *stack) {
             break;
         }
 
+        case BUILTIN_INPUT_CHAR_FROM_FILE: {
+            if (check_stack(stack, "I.cf", 1, ARG_IN_FILE)) {
+                return 1;
+            }
+            GlassValue *file_val = list_pop(stack);
+            String *str = string_from_char(fgetc(file_val->file));
+            GlassValue *str_val = new_str_value(str);
+            list_add(stack, str_val);
+            free_string(str);
+            free_glass_value(str_val);
+            free_glass_value(file_val);
+            break;
+        }
+        
+        case BUILTIN_INPUT_CLOSE_FILE: {
+            if (check_stack(stack, "I.fc", 1, ARG_IN_FILE)) {
+                return 1;
+            }
+            GlassValue *file_val = list_pop(stack);
+            fclose(file_val->file);
+            free_glass_value(file_val);
+            break;
+        }
+
         case BUILTIN_INPUT_EOF: {
             double eof = feof(stdin) ? 1.0 : 0.0;
             GlassValue *val = new_number_value(eof);
             list_add(stack, val);
             free_glass_value(val);
+            break;
+        }
+
+        case BUILTIN_INPUT_EOF_FILE: {
+            if (check_stack(stack, "I.e", 1, ARG_IN_FILE)) {
+                return 1;
+            }
+            GlassValue *file_val = list_pop(stack);
+            GlassValue *new_val = new_number_value(feof(file_val->file) ? 1.0 : 0.0);
+            list_add(stack, new_val);
+            free_glass_value(file_val);
+            free_glass_value(new_val);
+            break;
+        }
+
+        case BUILTIN_INPUT_FILE_IS_OPEN: {
+            if (check_stack(stack, "I.fo", 1, ARG_IN_FILE)) {
+                return 1;
+            }
+            GlassValue *file_val = list_pop(stack);
+            GlassValue *open_val = new_number_value(file_val->file == NULL ? 0 : 1);
+            list_add(stack, open_val);
+            free_glass_value(open_val);
+            free_glass_value(file_val);
             break;
         }
 
@@ -165,6 +262,36 @@ int execute_builtin(BuiltinFunc func, List *stack) {
             list_add(stack, str_val);
             free_string(str);
             free_glass_value(str_val);
+            break;
+        }
+
+        case BUILTIN_INPUT_LINE_FROM_FILE: {
+            if (check_stack(stack, "I.lf", 1, ARG_IN_FILE)) {
+                return 1;
+            }
+            GlassValue *file_val = list_pop(stack);
+            String *str = new_string();
+            int c;
+            while ((c = fgetc(file_val->file)) != EOF && c != '\n') {
+                string_add_char(str, c);
+            }
+            GlassValue *str_val = new_str_value(str);
+            list_add(stack, str_val);
+            free_string(str);
+            free_glass_value(str_val);
+            free_glass_value(file_val);
+            break;
+        }
+
+        case BUILTIN_INPUT_OPEN_FILE: {
+            if (check_stack(stack, "I.f", 1, ARG_STR)) {
+                return 1;
+            }
+            GlassValue *val = list_pop(stack);
+            GlassValue *file_val = new_in_file_value(val->str);
+            list_add(stack, file_val);
+            free_glass_value(file_val);
+            free_glass_value(val);
             break;
         }
 
@@ -322,12 +449,58 @@ int execute_builtin(BuiltinFunc func, List *stack) {
             break;
         }
 
+        case BUILTIN_OUTPUT_CLOSE_FILE: {
+            if (check_stack(stack, "O.fc", 1, ARG_OUT_FILE)) {
+                return 1;
+            }
+            GlassValue *file_val = list_pop(stack);
+            fclose(file_val->file);
+            free_glass_value(file_val);
+            break;
+        }
+
+        case BUILTIN_OUTPUT_FILE_IS_OPEN: {
+            if (check_stack(stack, "O.fo", 1, ARG_OUT_FILE)) {
+                return 1;
+            }
+            GlassValue *file_val = list_pop(stack);
+            GlassValue *open_val = new_number_value(file_val->file == NULL ? 0 : 1);
+            list_add(stack, open_val);
+            free_glass_value(open_val);
+            free_glass_value(file_val);
+            break;
+        }
+
         case BUILTIN_OUTPUT_NUM: {
             if (check_stack(stack, "O.on", 1, ARG_NUM)) {
                 return 1;
             }
             GlassValue *val = list_pop(stack);
             printf("%g", val->num);
+            free_glass_value(val);
+            break;
+        }
+
+        case BUILTIN_OUTPUT_NUM_FILE: {
+            if (check_stack(stack, "O.onf", 2, ARG_OUT_FILE, ARG_NUM)) {
+                return 1;
+            }
+            GlassValue *num_val = list_pop(stack);
+            GlassValue *file_val = list_pop(stack);
+            fprintf(file_val->file, "%g", num_val->num);
+            free_glass_value(num_val);
+            free_glass_value(file_val);
+            break;
+        }
+
+        case BUILTIN_OUTPUT_OPEN_FILE: {
+            if (check_stack(stack, "O.f", 1, ARG_STR)) {
+                return 1;
+            }
+            GlassValue *val = list_pop(stack);
+            GlassValue *file_val = new_out_file_value(val->str);
+            list_add(stack, file_val);
+            free_glass_value(file_val);
             free_glass_value(val);
             break;
         }
@@ -339,6 +512,18 @@ int execute_builtin(BuiltinFunc func, List *stack) {
             GlassValue *val = list_pop(stack);
             printf("%s", string_get_c_str(val->str));
             free_glass_value(val);
+            break;
+        }
+
+        case BUILTIN_OUTPUT_STR_FILE: {
+            if (check_stack(stack, "O.of", 2, ARG_OUT_FILE, ARG_STR)) {
+                return 1;
+            }
+            GlassValue *str_val = list_pop(stack);
+            GlassValue *file_val = list_pop(stack);
+            fwrite(string_data(str_val->str), 1, string_len(str_val->str), file_val->file);
+            free_glass_value(str_val);
+            free_glass_value(file_val);
             break;
         }
 
@@ -493,9 +678,6 @@ int execute_builtin(BuiltinFunc func, List *stack) {
             free_glass_value(val);
             break;
         }
-
-        default:
-            break;
     }
 
     return 0;
@@ -558,8 +740,10 @@ void output_stack_trace_line(const GlassValue *func_val, const GlassCommand *cmd
     free_string(file_name);
 }
 
-int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map *classes) {
+int execute_function(GlassValue *func_val, InterpreterState *state) {
     const GlassFunction *func = instance_get_func(func_val->inst, func_val->str);
+    List *stack = state->stack;
+    Map *globals = state->global_vars;
     GlassInstance inst = func_val->inst;
 
     Map *local_vars = new_map(STRING_HASH_OPS, VALUE_COPY_OPS);
@@ -596,7 +780,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
             }
 
             case CMD_BUILTIN: {
-                int ret = execute_builtin(cmd->builtin, stack);
+                int ret = execute_builtin(cmd->builtin, state);
                 if (ret != 0) {
                     output_stack_trace_line(func_val, cmd);
                     free_map(local_vars);
@@ -687,7 +871,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                     return 1;
                 }
                 GlassValue *new_func = list_pop(stack);
-                int ret = execute_function(new_func, stack, globals, classes);
+                int ret = execute_function(new_func, state);
                 free_glass_value(new_func);
                 if (ret != 0) {
                     output_stack_trace_line(func_val, cmd);
@@ -732,7 +916,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                 }
                 GlassValue *cname_val = list_pop(stack);
                 GlassValue *oname_val = list_pop(stack);
-                const GlassClass *gclass = map_get(classes, cname_val->str);
+                const GlassClass *gclass = map_get(state->classes, cname_val->str);
                 if (gclass == NULL) {
                     fprintf(stderr, "Error! (%s) is not a class!\nStack trace:\n",
                             string_get_c_str(cname_val->str));
@@ -747,7 +931,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
                 int ctor_ret = 0;
                 if (instance_has_func(new_inst, ctor_name)) {
                     GlassValue *ctor_val = new_func_value(new_inst, ctor_name);
-                    ctor_ret = execute_function(ctor_val, stack, globals, classes);
+                    ctor_ret = execute_function(ctor_val, state);
                     free_glass_value(ctor_val);
                 }
                 if (ctor_ret != 0) {
@@ -810,7 +994,7 @@ int execute_function(GlassValue *func_val, List *stack, Map *globals, const Map 
     return 0;
 }
 
-int run_interpreter(const Map *classes) {
+int run_interpreter(const Map *classes, const List *args) {
     String *main_class_name = string_from_char('M');
 
     if (!map_has(classes, main_class_name)) {
@@ -834,11 +1018,19 @@ int run_interpreter(const Map *classes) {
 
     init_instances();
 
+    InterpreterState state = {
+        .classes = classes,
+        .stack = new_list(VALUE_COPY_OPS),
+        .global_vars = new_map(STRING_HASH_OPS, VALUE_COPY_OPS),
+        .args = args,
+        .cur_arg = 0,
+    };
+
     GlassInstance main_inst = new_glass_instance(main_class);
     String *ctor_name = string_from_chars("c__");
     if (instance_has_func(main_inst, ctor_name)) {
         GlassValue *ctor_val = new_func_value(main_inst, ctor_name);
-        ret_val = execute_function(ctor_val, stack, globals, classes);
+        ret_val = execute_function(ctor_val, &state);
         free_glass_value(ctor_val);
     }
 
@@ -847,7 +1039,7 @@ int run_interpreter(const Map *classes) {
             VALUE_FUNCTION, .inst = main_inst, .str = main_func_name
         };
 
-        ret_val = execute_function(&val, stack, globals, classes);
+        ret_val = execute_function(&val, &state);
     }
 
     free_map(globals);

@@ -21,6 +21,13 @@ GlassValue *new_func_value(GlassInstance inst, const String *name) {
     return val;
 }
 
+GlassValue *new_in_file_value(const String *name) {
+    GlassValue *val = new_glass_value(VALUE_INPUT_FILE);
+    val->str = copy_string(name);
+    val->file = fopen(string_get_c_str(val->str), "r");
+    return val;
+}
+
 GlassValue *new_inst_value(GlassInstance inst) {
     GlassValue *val = new_glass_value(VALUE_INSTANCE);
     val->inst = copy_glass_instance(inst);
@@ -39,6 +46,13 @@ GlassValue *new_number_value(double num) {
     return val;
 }
 
+GlassValue *new_out_file_value(const String *name) {
+    GlassValue *val = new_glass_value(VALUE_OUTPUT_FILE);
+    val->str = copy_string(name);
+    val->file = fopen(string_get_c_str(val->str), "w");
+    return val;
+}
+
 GlassValue *new_str_value(const String *str) {
     GlassValue *val = new_glass_value(VALUE_STRING);
     val->str = copy_string(str);
@@ -49,6 +63,12 @@ GlassValue *copy_glass_value(const GlassValue *value) {
     GlassValue *copy = new_glass_value(value->type);
 
     switch (value->type) {
+        case VALUE_INPUT_FILE:
+        case VALUE_OUTPUT_FILE:
+            copy->str = copy_string(value->str);
+            copy->file = value->file;
+            break;
+
         case VALUE_INSTANCE:
             copy->inst = copy_glass_instance(value->inst);
             break;
@@ -127,6 +147,13 @@ String *value_get_string(const GlassValue *val) {
             char num_buf[30];
             sprintf(num_buf, "<%g>", val->num);
             String *str = string_from_chars(num_buf);
+            return str;
+        }
+
+        case VALUE_OUTPUT_FILE: {
+            String *str = string_from_chars("<output file '");
+            string_add_str(str, val->str);
+            string_add_chars(str, "'>");
             return str;
         }
 

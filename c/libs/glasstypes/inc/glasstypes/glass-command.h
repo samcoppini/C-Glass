@@ -26,9 +26,18 @@ typedef enum CommandType {
 } CommandType;
 
 typedef enum BuiltinFunc {
+    BUILTIN_INPUT_ARGUMENT,        // I.a
+    BUILTIN_INPUT_ARG_COUNT,       // I.ac
     BUILTIN_INPUT_CHAR,            // I.c
+    BUILTIN_INPUT_CHAR_FROM_FILE,  // I.cf
+    BUILTIN_INPUT_CLOSE_FILE,      // I.fc
     BUILTIN_INPUT_EOF,             // I.e
+    BUILTIN_INPUT_EOF_FILE,        // I.ef
+    BUILTIN_INPUT_OPEN_FILE,       // I.f
+    BUILTIN_INPUT_FILE_IS_OPEN,    // I.fo
     BUILTIN_INPUT_LINE,            // I.l
+    BUILTIN_INPUT_LINE_FROM_FILE,  // I.lf
+
     BUILTIN_MATH_ADD,              // A.a
     BUILTIN_MATH_DIVIDE,           // A.d
     BUILTIN_MATH_EQUAL,            // A.e
@@ -41,8 +50,15 @@ typedef enum BuiltinFunc {
     BUILTIN_MATH_MULTIPLY,         // A.m
     BUILTIN_MATH_NOT_EQUAL,        // A.ne
     BUILTIN_MATH_SUBTRACT,         // A.s
+
+    BUILTIN_OUTPUT_CLOSE_FILE,     // O.fc
+    BUILTIN_OUTPUT_OPEN_FILE,      // O.f
+    BUILTIN_OUTPUT_FILE_IS_OPEN,   // O.fo
     BUILTIN_OUTPUT_NUM,            // O.on
+    BUILTIN_OUTPUT_NUM_FILE,       // O.onf
     BUILTIN_OUTPUT_STR,            // O.o
+    BUILTIN_OUTPUT_STR_FILE,       // O.of
+
     BUILTIN_STR_APPEND,            // S.a
     BUILTIN_STR_EQUAL,             // S.e
     BUILTIN_STR_INDEX,             // S.i
@@ -51,6 +67,7 @@ typedef enum BuiltinFunc {
     BUILTIN_STR_REPLACE,           // S.si
     BUILTIN_STR_SPLIT,             // S.d
     BUILTIN_STR_STR_TO_NUM,        // S.sn
+
     BUILTIN_VAR_DELETE,            // V.d
     BUILTIN_VAR_NEW,               // V.n
 } BuiltinFunc;
