@@ -1,3 +1,4 @@
+#include "glasstypes/glass-builders.h"
 #include "glasstypes/glass-class.h"
 #include "glasstypes/glass-command.h"
 #include "glasstypes/glass-function.h"
@@ -12,8 +13,18 @@ Map *get_classes(const char *chars) {
     Stream *stream = stream_from_string(str);
     stream_set_name(stream, str);
 
-    Map *classes = parse_classes(stream);
+    GlassProgramBuilder *builder = new_program_builder();
 
+    if (parse_classes(builder, stream)) {
+        free_program_builder(builder);
+        free_stream(stream);
+        free_string(str);
+        return NULL;
+    }
+
+    Map *classes = build_glass_program(builder);
+
+    free_program_builder(builder);
     free_stream(stream);
     free_string(str);
 
@@ -129,6 +140,8 @@ int main() {
     ASSERT_NULL(get_classes("{M[m(n$)]}"));
     ASSERT_NULL(get_classes("{M[m(0$)]}"));
     ASSERT_NULL(get_classes("{M[m\"]}"));
+    ASSERT_NULL(get_classes("{M[m][m]}"));
+    ASSERT_NULL(get_classes("{M[m]}{M[m]}"));
 
     return test_status();
 }

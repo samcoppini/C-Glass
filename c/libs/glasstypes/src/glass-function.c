@@ -87,8 +87,20 @@ const String *func_get_name(const GlassFunction *func) {
     return func->name;
 }
 
+const String *func_get_filename(const GlassFunction *func) {
+    return func->filename;
+}
+
 const GlassCommand *func_get_command(const GlassFunction *func, size_t index) {
     return list_get(func->cmds, index);
+}
+
+unsigned func_get_line(const GlassFunction *func) {
+    return func->line;
+}
+
+unsigned func_get_col(const GlassFunction *func) {
+    return func->col;
 }
 
 size_t func_len(const GlassFunction *func) {

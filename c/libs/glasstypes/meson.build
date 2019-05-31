@@ -5,6 +5,7 @@ glasstypes_src = files(
     'src/glass-class.c',
     'src/glass-command.c',
     'src/glass-function.c',
+    'src/glass-program.c',
 )
 
 glasstypes_lib = static_library(

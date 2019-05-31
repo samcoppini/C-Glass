@@ -328,7 +328,7 @@ static GlassFunction *parse_function(Stream *stream) {
     return func;
 }
 
-static GlassClass *parse_class(Stream *stream) {
+static GlassClassBuilder *parse_class(Stream *stream) {
     char c = stream_get_char(stream);
     assert(c == '{');
 
@@ -353,10 +353,7 @@ static GlassClass *parse_class(Stream *stream) {
                 free_class_builder(builder);
                 return NULL;
             }
-            if (builder_add_func(builder, func)) {
-                free_class_builder(builder);
-                return NULL;
-            }
+            builder_add_func(builder, func);
         }
         else if (c != '}') {
             parser_error(stream, "Error! Unexpected char %c in a class definition!", c);
@@ -372,44 +369,35 @@ static GlassClass *parse_class(Stream *stream) {
         return NULL;
     }
 
-    GlassClass *gclass = build_glass_class(builder);
-    free_class_builder(builder);
-    return gclass;
+    return builder;
 }
 
-Map *parse_classes(Stream *stream) {
-    Map *classes = new_map(STRING_HASH_OPS, CLASS_COPY_OPS);
-
+bool parse_classes(GlassProgramBuilder *builder, Stream *stream) {
     while (skip_whitespace(stream)) {
         char c = stream_get_char(stream);
         if (c == '{') {
             stream_unget(stream);
-            GlassClass *gclass = parse_class(stream);
+            GlassClassBuilder *gclass = parse_class(stream);
             if (gclass == NULL) {
-                free_map(classes);
-                return NULL;
+                return true;
             }
-            map_set(classes, class_get_name(gclass), gclass);
-            free_glass_class(gclass);
+            builder_add_class(builder, gclass);
+            free_class_builder(gclass);
         }
         else {
             parser_error(stream, "Unexpected char '%c' encountered when expecting '{'.", c);
-            free_map(classes);
-            return NULL;
+            return true;
         }
     }
 
-    return classes;
+    return false;
 }
 
 Map *classes_from_files(List *filenames, bool include_builtins) {
-    Map *classes;
+    GlassProgramBuilder *builder = new_program_builder();
 
     if (include_builtins) {
-        classes = get_builtin_classes();
-    }
-    else {
-        classes = new_map(STRING_HASH_OPS, CLASS_COPY_OPS);
+        add_builtin_classes(builder);
     }
 
     for (size_t i = 0; i < list_len(filenames); i++) {
@@ -418,7 +406,7 @@ Map *classes_from_files(List *filenames, bool include_builtins) {
 
         if (fp == NULL) {
             fprintf(stderr, "Unable to open %s!\n", string_get_c_str(filename));
-            free_map(classes);
+            free_program_builder(builder);
             return NULL;
         }
 
@@ -426,34 +414,17 @@ Map *classes_from_files(List *filenames, bool include_builtins) {
         stream_set_name(file_stream, filename);
         fclose(fp);
 
-        Map *new_classes = parse_classes(file_stream);
+        bool failed = parse_classes(builder, file_stream);
         free_stream(file_stream);
 
-        if (new_classes == NULL) {
-            free_map(classes);
+        if (failed) {
+            free_program_builder(builder);
             return NULL;
         }
-
-        List *class_names = map_get_keys(new_classes);
-        for (size_t j = 0; j < list_len(class_names); j++) {
-            String *cname = list_get_mutable(class_names, j);
-
-            if (map_has(classes, cname)) {
-                fprintf(stderr, "Error! %s defined multiple times!\n", 
-                        string_get_c_str(cname));
-                free_list(class_names);
-                free_map(new_classes);
-                free_map(classes);
-                return NULL;
-            }
-
-            const GlassClass *gclass = map_get(new_classes, cname);
-            map_set(classes, cname, gclass);
-        }
-
-        free_list(class_names);
-        free_map(new_classes);
     }
+
+    Map *classes = build_glass_program(builder);
+    free_program_builder(builder);
 
     return classes;
 }

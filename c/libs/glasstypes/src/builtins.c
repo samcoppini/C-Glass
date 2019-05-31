@@ -73,9 +73,8 @@ const BuiltinInfo BUILTIN_CLASS_INFO[NUM_BUILTIN_CLASSES] = {
     },
 };
 
-Map *get_builtin_classes(void) {
+void add_builtin_classes(GlassProgramBuilder *prog_builder) {
     String *builtin_name = string_from_chars("<builtin>");
-    Map *classes = new_map(STRING_HASH_OPS, CLASS_COPY_OPS);
 
     for (size_t i = 0; i < NUM_BUILTIN_CLASSES; i++) {
         BuiltinInfo builtin_class = BUILTIN_CLASS_INFO[i];
@@ -106,18 +105,12 @@ Map *get_builtin_classes(void) {
 
             free_glass_func(func);
             free_func_builder(func_builder);
-            free_string(func_name);
+            free_string(func_name);            
         }
 
-        GlassClass *gclass = build_glass_class(class_builder);
-        map_set(classes, class_name, gclass);
-
-        free_string(class_name);
+        builder_add_class(prog_builder, class_builder);
         free_class_builder(class_builder);
-        free_glass_class(gclass);
     }
 
     free_string(builtin_name);
-
-    return classes;
 }

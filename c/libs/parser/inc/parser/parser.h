@@ -3,11 +3,12 @@
 
 #include <stdbool.h>
 
+struct GlassProgramBuilder;
 struct List;
 struct Map;
 struct Stream;
 
-struct Map *parse_classes(struct Stream *stream);
+bool parse_classes(struct GlassProgramBuilder *builder, struct Stream *stream);
 
 struct Map *classes_from_files(struct List *filenames, bool include_builtins);
 

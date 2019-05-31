@@ -18,6 +18,12 @@ const struct String *func_get_name(const GlassFunction *func);
 
 const struct GlassCommand *func_get_command(const GlassFunction *func, size_t index);
 
+const struct String *func_get_filename(const GlassFunction *func);
+
+unsigned func_get_line(const GlassFunction *func);
+
+unsigned func_get_col(const GlassFunction *func);
+
 size_t func_len(const GlassFunction *func);
 
 #endif

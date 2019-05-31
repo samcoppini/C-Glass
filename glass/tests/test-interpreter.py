@@ -15,7 +15,7 @@ with open(args.expected, 'rb') as file:
     expected = file.read()
     if stdout != expected:
         print('---Expected Output---')
-        print(stdout)
-        print('---Actual Output---')
         print(expected)
+        print('---Actual Output---')
+        print(stdout)
         sys.exit(1)
