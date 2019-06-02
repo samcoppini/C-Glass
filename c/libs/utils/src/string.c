@@ -54,6 +54,9 @@ String *copy_string(const String *str) {
 }
 
 String *string_substr(const String *str, size_t index, size_t len) {
+    if (index >= str->len) {
+        return new_string();
+    }
     String *substr = malloc(sizeof(String));
     substr->len = len < str->len - index ? len : str->len - index;
     substr->alloc = STR_INIT_ALLOC;

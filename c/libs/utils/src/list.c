@@ -1,6 +1,7 @@
 #include "utils/list.h"
 #include "utils/copy-interface.h"
 
+#include <assert.h>
 #include <stdlib.h>
 
 struct List {
@@ -61,7 +62,10 @@ void list_add(List *list, const void *val) {
 }
 
 void *list_pop(List *list) {
+    assert(list->len > 0);
+
     list->len--;
+    
     return list->elements[list->len];
 }
 
@@ -85,10 +89,14 @@ bool list_empty(const List *list) {
 }
 
 const void *list_get(const List *list, size_t index) {
+    assert(index < list->len);
+
     return list->elements[index];
 }
 
 void *list_get_mutable(List *list, size_t index) {
+    assert(index < list->len);
+
     return list->elements[index];
 }
 

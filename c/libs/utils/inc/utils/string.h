@@ -23,6 +23,8 @@ String *string_from_chars(const char *chars);
 // Returns a copy of the given string
 String *copy_string(const String *str);
 
+// Returns a new string by copying the content in this string, starting at index,
+// copying up to len characters
 String *string_substr(const String *str, size_t index, size_t len);
 
 // Frees the memory associated with a string
@@ -37,6 +39,7 @@ void string_add_chars(String *str, const char *chars);
 // Adds the content of the string to the end of another string
 void string_add_str(String *str1, const String *str2);
 
+// Sets a character in a string
 void string_set(String *str, size_t index, char c);
 
 // Returns a hash for the string
