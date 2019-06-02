@@ -1,0 +1,22 @@
+'A class used to represent the absence of a value'
+{(Null)
+    [(isNull)
+        <1>
+    ]
+
+    [(notNull)
+        <0>
+    ]
+}
+
+'A class used to represent the presence of a value. Have another type inherit
+ from this one, and use (Null) in conjunction with it'
+{(Nullable)
+    [(isNull)
+        <0>
+    ]
+
+    [(notNull)
+        <1>
+    ]
+}
