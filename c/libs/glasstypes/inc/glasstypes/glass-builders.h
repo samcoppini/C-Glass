@@ -41,6 +41,8 @@ void builder_add_class(GlassProgramBuilder *builder, const GlassClassBuilder *fr
 
 void builder_add_func(GlassClassBuilder *builder, const struct GlassFunction *func);
 
+void builder_add_parent(GlassClassBuilder *builder, const struct String *name);
+
 bool builder_add_command(GlassFuncBuilder *builder, const struct GlassCommand *cmd);
 
 void add_builtin_classes(GlassProgramBuilder *prog_builder);

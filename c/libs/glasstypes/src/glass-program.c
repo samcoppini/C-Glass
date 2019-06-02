@@ -1,5 +1,6 @@
 #include "glasstypes/glass-builders.h"
 #include "glasstypes/glass-class.h"
+#include "glasstypes/glass-function.h"
 
 #include "utils/copy-interface.h"
 #include "utils/list.h"
@@ -9,10 +10,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+enum InheritanceState {
+    INHERITANCE_UNHANDLED,
+    INHERITANCE_HANDLING,
+    INHERITANCE_HANDLED,
+};
+
 struct GlassClassBuilder {
     String *name;
 
     List *parents;
+
+    enum InheritanceState state;
 
     List *funcs;
 
@@ -40,18 +49,80 @@ void builder_add_class(GlassProgramBuilder *builder, const GlassClassBuilder *cl
     list_add(builder->classes, class_builder);
 }
 
+bool func_matches_name(const void *str, const void *val) {
+    const String *func_name = (const String *) str;
+    const GlassFunction *func = (const GlassFunction *) val;
+    return strings_equal(func_get_name(func), func_name);
+}
+
+bool resolve_inheritance(Map *class_builders, const String *class_name, List *class_chain) {
+    GlassClassBuilder *builder = map_get_mutable(class_builders, class_name);
+    
+    if (builder == NULL) {
+        fprintf(stderr, "Error! Cannot inherit from non existent class!\n");
+        return true;
+    }
+    else if (builder->state == INHERITANCE_HANDLED) {
+        return false;
+    }
+    else if (builder->state == INHERITANCE_HANDLING) {
+        fprintf(stderr, "Error! Inheritance cycle detected!\n");
+        return true;
+    }
+    else if (list_len(builder->parents) == 0) {
+        return false;
+    }
+    else {
+        builder->state = INHERITANCE_HANDLING;
+        list_add(class_chain, class_name);
+
+        for (size_t i = 0; i < list_len(builder->parents); i++) {
+            const String *parent_name = list_get(builder->parents, i);
+            if (resolve_inheritance(class_builders, parent_name, class_chain)) {
+                return true;
+            }
+
+            const GlassClassBuilder *parent = map_get(class_builders, parent_name);
+
+            for (size_t j = 0; j < list_len(parent->funcs); j++) {
+                const GlassFunction *func = list_get(parent->funcs, j);
+                const String *func_name = func_get_name(func);
+
+                if (!list_has(builder->funcs, func_name, func_matches_name)) {
+                    list_add(builder->funcs, func);
+                }
+            }
+        }
+
+        builder->state = INHERITANCE_HANDLED;
+        free_string(list_pop(builder->parents));
+    }
+
+    return false;
+}
+
 Map *build_classes(Map *builders_map) {
     Map *classes = new_map(STRING_HASH_OPS, CLASS_COPY_OPS);
     List *class_names = map_get_keys(builders_map);
+    List *parent_chain = new_list(STRING_COPY_OPS);
 
     for (size_t i = 0; i < list_len(class_names); i++) {
         const String *class_name = list_get(class_names, i);
+
+        if (resolve_inheritance(builders_map, class_name, parent_chain)) {
+            free_map(classes);
+            free_list(class_names);
+            free_list(parent_chain);
+            return NULL;
+        }
+
         const GlassClassBuilder *builder = map_get(builders_map, class_name);
 
         GlassClass *gclass = build_glass_class(builder);
         if (gclass == NULL) {
             return NULL;
         }
+
         map_set(classes, class_name, gclass);
         free_glass_class(gclass);
     }

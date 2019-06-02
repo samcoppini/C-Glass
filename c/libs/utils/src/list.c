@@ -69,6 +69,17 @@ size_t list_len(const List *list) {
     return list->len;
 }
 
+bool list_has(const List *list, const void *val, bool (*cmp)(const void *cmp_val,
+                                                             const void *list_val))
+{
+    for (size_t i = 0; i < list->len; i++) {
+        if (cmp(val, list->elements)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool list_empty(const List *list) {
     return list->len == 0;
 }

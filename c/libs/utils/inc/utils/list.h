@@ -21,6 +21,9 @@ void *list_pop(List *list);
 
 size_t list_len(const List *list);
 
+bool list_has(const List *list, const void *val, bool (*cmp)(const void *cmp_val,
+                                                             const void *list_val));
+
 bool list_empty(const List *list);
 
 const void *list_get(const List *list, size_t index);

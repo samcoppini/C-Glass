@@ -19,10 +19,18 @@ struct GlassClass {
     unsigned line, col;
 };
 
+enum InheritanceState {
+    INHERITANCE_UNHANDLED,
+    INHERITANCE_HANDLING,
+    INHERITANCE_HANDLED,
+};
+
 struct GlassClassBuilder {
     String *name;
 
     List *parents;
+
+    enum InheritanceState inheritance;
 
     List *funcs;
 
@@ -47,6 +55,7 @@ GlassClassBuilder *new_class_builder(const String *name, const String *filename,
     GlassClassBuilder *builder = malloc(sizeof(GlassClassBuilder));
     builder->name = copy_string(name);
     builder->parents = new_list(STRING_COPY_OPS);
+    builder->inheritance = INHERITANCE_UNHANDLED;
     builder->funcs = new_list(FUNC_COPY_OPS);
     builder->filename = copy_string(filename);
     builder->line = line;
@@ -58,6 +67,7 @@ GlassClassBuilder *copy_class_builder(const GlassClassBuilder *builder) {
     GlassClassBuilder *copy = malloc(sizeof(GlassClassBuilder));
     copy->name = copy_string(builder->name);
     copy->parents = copy_list(builder->parents);
+    copy->inheritance = builder->inheritance;
     copy->funcs = copy_list(builder->funcs);
     copy->filename = copy_string(builder->filename);
     copy->line = builder->line;
@@ -148,6 +158,10 @@ GlassClass *build_glass_class(const GlassClassBuilder *builder) {
 
 void builder_add_func(GlassClassBuilder *builder, const GlassFunction *func) {
     list_add(builder->funcs, func);
+}
+
+void builder_add_parent(GlassClassBuilder *builder, const String *name) {
+    list_add(builder->parents, name);
 }
 
 const String *class_get_name(const GlassClass *gclass) {

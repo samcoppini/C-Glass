@@ -121,6 +121,7 @@ int main() {
 
     // Invalid Glass programs, should return NULL
     ASSERT_NULL(get_classes("{"));
+    ASSERT_NULL(get_classes("{}"));
     ASSERT_NULL(get_classes("{M"));
     ASSERT_NULL(get_classes("{(Name)"));
     ASSERT_NULL(get_classes("{(Name)[}"));
@@ -142,6 +143,9 @@ int main() {
     ASSERT_NULL(get_classes("{M[m\"]}"));
     ASSERT_NULL(get_classes("{M[m][m]}"));
     ASSERT_NULL(get_classes("{M[m]}{M[m]}"));
+    ASSERT_NULL(get_classes("{MNN[m]}{N}"));
+    ASSERT_NULL(get_classes("{MZ[m]}"));
+    ASSERT_NULL(get_classes("{MN[m]}{N}"));
 
     return test_status();
 }

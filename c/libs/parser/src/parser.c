@@ -355,6 +355,17 @@ static GlassClassBuilder *parse_class(Stream *stream) {
             }
             builder_add_func(builder, func);
         }
+        else if (c == '(') {
+            stream_unget(stream);
+            String *parent = parse_name(stream);
+            builder_add_parent(builder, parent);
+            free_string(parent);
+        }
+        else if (isalpha(c)) {
+            String *parent = string_from_char(c);
+            builder_add_parent(builder, parent);
+            free_string(parent);
+        }
         else if (c != '}') {
             parser_error(stream, "Error! Unexpected char %c in a class definition!", c);
             free_class_builder(builder);
