@@ -174,7 +174,7 @@ void add_name(const Map *classes, Map *name_counts, List *class_names,
         for (size_t i = 0; i < list_len(func_name_copy); i++) {
             const String *func_name = list_get(func_name_copy, i);
 
-            if (class_has_func(gclass, name)) {
+            if (class_has_func(gclass, func_name)) {
                 const GlassFunction *func = class_get_func(gclass, func_name);
                 count_names_in_func(classes, name_counts, class_names, func_names, func);
             }
@@ -191,9 +191,11 @@ Map *get_reachable_names(const Map *classes) {
 
     String *main_class_name = string_from_char('M');
     String *main_func_name = string_from_char('m');
+    String *ctor_name = string_from_chars("c__");
 
-    add_name(classes, name_counts, class_names, func_names, main_class_name);
+    add_name(classes, name_counts, class_names, func_names, ctor_name);
     add_name(classes, name_counts, class_names, func_names, main_func_name);
+    add_name(classes, name_counts, class_names, func_names, main_class_name);
 
     free_string(main_class_name);
     free_string(main_func_name);
