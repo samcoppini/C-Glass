@@ -37,7 +37,7 @@ bool parse_command_line(Options *opts, int argc, char **argv) {
         if (collecting_args) {
             list_add(opts->args, str);
         }
-        else if (strcmp(argv[i], "--help")) {
+        else if (strcmp(argv[i], "--help") == 0) {
             usage(argv[i]);
             return true;
         }
