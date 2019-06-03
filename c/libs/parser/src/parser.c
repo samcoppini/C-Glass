@@ -404,7 +404,10 @@ bool parse_classes(GlassProgramBuilder *builder, Stream *stream) {
     return false;
 }
 
-Map *classes_from_files(List *filenames, bool include_builtins) {
+Map *classes_from_files(List *filenames,
+                        bool include_builtins,
+                        bool resolve_inheritance)
+{
     GlassProgramBuilder *builder = new_program_builder();
 
     if (include_builtins) {
@@ -434,7 +437,7 @@ Map *classes_from_files(List *filenames, bool include_builtins) {
         }
     }
 
-    Map *classes = build_glass_program(builder);
+    Map *classes = build_glass_program(builder, resolve_inheritance);
     free_program_builder(builder);
 
     return classes;

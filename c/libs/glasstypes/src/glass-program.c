@@ -101,7 +101,7 @@ bool resolve_inheritance(Map *class_builders, const String *class_name, List *cl
     return false;
 }
 
-Map *build_classes(Map *builders_map) {
+Map *build_classes(Map *builders_map, bool handle_inheritance) {
     Map *classes = new_map(STRING_HASH_OPS, CLASS_COPY_OPS);
     List *class_names = map_get_keys(builders_map);
     List *parent_chain = new_list(STRING_COPY_OPS);
@@ -109,7 +109,9 @@ Map *build_classes(Map *builders_map) {
     for (size_t i = 0; i < list_len(class_names); i++) {
         const String *class_name = list_get(class_names, i);
 
-        if (resolve_inheritance(builders_map, class_name, parent_chain)) {
+        if (handle_inheritance &&
+            resolve_inheritance(builders_map, class_name, parent_chain))
+        {
             free_map(classes);
             free_list(class_names);
             free_list(parent_chain);
@@ -130,7 +132,7 @@ Map *build_classes(Map *builders_map) {
     return classes;
 }
 
-Map *build_glass_program(const GlassProgramBuilder *builder) {
+Map *build_glass_program(const GlassProgramBuilder *builder, bool handle_inheritance) {
     Map *builders_map = new_map(STRING_HASH_OPS, CLASS_BUILDER_COPY_OPS);
     Map *unique_classes = new_map(STRING_HASH_OPS, LIST_COPY_OPS);
 
@@ -187,7 +189,7 @@ Map *build_glass_program(const GlassProgramBuilder *builder) {
     }
 
     free_map(unique_classes);
-    Map *classes = build_classes(builders_map);
+    Map *classes = build_classes(builders_map, handle_inheritance);
     free_map(builders_map);
 
     return classes;

@@ -35,7 +35,7 @@ struct GlassClass *build_glass_class(const GlassClassBuilder *builder);
 
 struct GlassFunction *build_glass_function(const GlassFuncBuilder *builder);
 
-struct Map *build_glass_program(const GlassProgramBuilder *builder);
+struct Map *build_glass_program(const GlassProgramBuilder *builder, bool handle_inheritance);
 
 void builder_add_class(GlassProgramBuilder *builder, const GlassClassBuilder *free_class_builder);
 

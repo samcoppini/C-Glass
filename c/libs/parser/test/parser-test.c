@@ -22,7 +22,7 @@ Map *get_classes(const char *chars) {
         return NULL;
     }
 
-    Map *classes = build_glass_program(builder);
+    Map *classes = build_glass_program(builder, true);
 
     free_program_builder(builder);
     free_stream(stream);

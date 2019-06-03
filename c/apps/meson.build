@@ -1,1 +1,2 @@
 subdir('interpreter')
+subdir('minifier')

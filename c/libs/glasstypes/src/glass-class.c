@@ -14,6 +14,8 @@ struct GlassClass {
 
     Map *funcs;
 
+    List *parents;
+
     String *filename;
 
     unsigned line, col;
@@ -43,6 +45,7 @@ GlassClass *copy_glass_class(const GlassClass *gclass) {
     GlassClass *copy = malloc(sizeof(GlassClass));
     copy->name = copy_string(gclass->name);
     copy->funcs = copy_map(gclass->funcs);
+    copy->parents = copy_list(gclass->parents);
     copy->filename = copy_string(gclass->filename);
     copy->line = gclass->line;
     copy->col = gclass->col;
@@ -148,6 +151,7 @@ GlassClass *build_glass_class(const GlassClassBuilder *builder) {
     gclass->filename = copy_string(builder->filename);
     gclass->name = copy_string(builder->name);
     gclass->funcs = func_map;
+    gclass->parents = copy_list(builder->parents);
     gclass->line = builder->line;
     gclass->col = builder->col;
 

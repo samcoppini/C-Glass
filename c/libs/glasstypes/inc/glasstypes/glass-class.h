@@ -6,6 +6,7 @@
 typedef struct GlassClass GlassClass;
 struct CopyInterface;
 struct GlassFunction;
+struct List;
 struct Map;
 struct String;
 
@@ -18,6 +19,8 @@ GlassClass *copy_glass_class(const GlassClass *gclass);
 void free_glass_class(GlassClass *gclass);
 
 const struct String *class_get_name(const GlassClass *gclass);
+
+const struct List *class_get_parents(const GlassClass *gclass);
 
 bool class_has_func(const GlassClass *gclass, const struct String *name);
 
