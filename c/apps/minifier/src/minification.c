@@ -14,41 +14,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct NamePair {
-    String *class_name, *method_name;
-} NamePair;
-
-void *copy_name_pair(const void *pair) {
-    NamePair *copy = malloc(sizeof(NamePair));
-    copy->class_name = ((NamePair *) pair)->class_name;
-    copy->method_name = ((NamePair *) pair)->method_name;
-    return copy;
-}
-
-void free_name_pair(void *pair) {
-    NamePair *name_pair = pair;
-    free_string(name_pair->class_name);
-    free_string(name_pair->method_name);
-    free(name_pair);
-}
-
-size_t hash_name_pair(const void *pair) {
-    const NamePair *name_pair = pair;
-    return hash_string(name_pair->class_name) ^ hash_string(name_pair->method_name);
-}
-
-bool name_pairs_equal(const void *pair1, const void *pair2) {
-    const NamePair *names1 = pair1;
-    const NamePair *names2 = pair2;
-
-    return strings_equal(names1->class_name, names2->class_name) &&
-           strings_equal(names1->method_name, names2->method_name);
-}
-
-const HashInterface *NAME_PAIR_HASH_OPS = &(HashInterface) {
-    copy_name_pair, free_name_pair, hash_name_pair, name_pairs_equal,
-};
-
 typedef enum NameScope {
     NAME_LOCAL,
     NAME_CLASSWIDE,
