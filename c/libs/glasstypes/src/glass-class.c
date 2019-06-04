@@ -184,6 +184,10 @@ const GlassFunction *class_get_func(const GlassClass *gclass, const String *name
     return map_get(gclass->funcs, name);
 }
 
+List *class_get_func_names(const GlassClass *gclass) {
+    return map_get_keys(gclass->funcs);
+}
+
 static void *copy_glass_class_generic(const void *gclass) {
     return copy_glass_class(gclass);
 }

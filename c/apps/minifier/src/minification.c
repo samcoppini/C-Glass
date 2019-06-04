@@ -3,8 +3,8 @@
 #include "glasstypes/glass-class.h"
 #include "glasstypes/glass-command.h"
 #include "glasstypes/glass-function.h"
+#include "parser/parser.h"
 #include "utils/copy-interface.h"
-#include "utils/hash-interface.h"
 #include "utils/list.h"
 #include "utils/map.h"
 #include "utils/set.h"
@@ -13,6 +13,32 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+typedef struct NameCount {
+    String *name;
+
+    int count;
+} NameCount;
+
+void *copy_name_count(const void *name_count) {
+    NameCount *copy = malloc(sizeof(NameCount));
+    copy->name = copy_string(((NameCount *) name_count)->name);
+    copy->count = ((NameCount *) name_count)->count;
+    return copy;
+}
+
+void free_name_count(void *name_count) {
+    free_string(((NameCount *) name_count)->name);
+    free(name_count);
+}
+
+const CopyInterface *NAME_COUNT_COPY_OPS = &(CopyInterface) {
+    copy_name_count, free_name_count,
+};
+
+int compare_names_descending(const void *name1, const void *name2) {
+    return ((NameCount *) name1)->count - ((NameCount *) name2)->count;
+}
 
 typedef enum NameScope {
     NAME_LOCAL,
@@ -176,17 +202,124 @@ Map *get_reachable_names(const Map *classes) {
     return name_counts;
 }
 
-String *minify_glass_classes(const Map *classes) {
-    Map *name_counts = get_reachable_names(classes);
-    List *names = map_get_keys(name_counts);
+Set *get_fixed_names(const Map *name_counts) {
+    List *empty_list = new_list(STRING_COPY_OPS);
+    Map *builtins = classes_from_files(empty_list, true, false);
+    Set *fixed_names = new_set(STRING_HASH_OPS);
 
-    for (size_t i = 0; i < list_len(names); i++) {
-        String *name = list_get_mutable(names, i);
-        printf("%s: %d\n", string_get_c_str(name), *(int *) map_get(name_counts, name));
+    String *main_class_name = string_from_char('M');
+    String *main_func_name = string_from_char('m');
+
+    set_add(fixed_names, main_class_name);
+    set_add(fixed_names, main_func_name);
+
+    List *builtin_classes = map_get_keys(builtins);
+    for (size_t i = 0; i < list_len(builtin_classes); i++) {
+        const String *class_name = list_get(builtin_classes, i);
+        set_add(fixed_names, class_name);
+
+        if (map_has(name_counts, class_name)) {
+            const GlassClass *builtin_class = map_get(builtins, class_name);
+            List *func_names = class_get_func_names(builtin_class);
+
+            for (size_t j = 0; j < list_len(func_names); j++) {
+                const String *func_name = list_get(func_names, j);
+                if (map_has(name_counts, func_name)) {
+                    set_add(fixed_names, func_name);
+                }
+            }
+
+            free_list(func_names);
+        }
     }
 
+    free_string(main_class_name);
+    free_string(main_func_name);
+    free_list(builtin_classes);
+    free_list(empty_list);
+    free_map(builtins);
+
+    return fixed_names;
+}
+
+Map *reassign_names(const Map *name_counts) {
+    Set *fixed_names = get_fixed_names(name_counts);
+
+    List *sorted_names = new_list(NAME_COUNT_COPY_OPS);
+
+    List *names_list = map_get_keys(name_counts);
+    for (size_t i = 0; i < list_len(names_list); i++) {
+        String *name = list_get_mutable(names_list, i);
+        NameCount count = { name, *(int *) map_get(name_counts, name) };
+        list_add(sorted_names, &count);
+    }
+
+    list_sort(sorted_names, compare_names_descending);
+
+    Map *reassigned_names = new_map(STRING_HASH_OPS, STRING_COPY_OPS);
+
+    String *local_name = string_from_chars("_`");
+    String *classwide_name = string_from_char('`');
+    String *global_name = string_from_char('`');
+
+    for (size_t i = 0; i < list_len(sorted_names); i++) {
+        const NameCount *name_count = list_get(sorted_names, i);
+        const String *name = name_count->name;
+
+        if (set_has(fixed_names, name)) {
+            map_set(reassigned_names, name, name);
+            continue;
+        }
+
+        String *reassigned_name = string_from_char('M');
+        while (set_has(fixed_names, reassigned_name)) {
+            free_string(reassigned_name);
+            switch (get_name_scope(name)) {
+                case NAME_LOCAL:
+                    reassigned_name = inc_name(local_name, NAME_LOCAL);
+                    free_string(local_name);
+                    local_name = copy_string(reassigned_name);
+                    break;
+                
+                case NAME_CLASSWIDE:
+                    reassigned_name = inc_name(classwide_name, NAME_CLASSWIDE);
+                    free_string(classwide_name);
+                    classwide_name = copy_string(reassigned_name);
+                    break;
+                
+                case NAME_GLOBAL:
+                    reassigned_name = inc_name(global_name, NAME_GLOBAL);
+                    free_string(global_name);
+                    global_name = copy_string(reassigned_name);
+                    break;
+            }
+        }
+        map_set(reassigned_names, name, reassigned_name);
+        free_string(reassigned_name);
+    }
+
+    free_list(sorted_names);
+    free_set(fixed_names);
+
+    return reassigned_names;
+}
+
+String *minify_glass_classes(const Map *classes) {
+    Map *name_counts = get_reachable_names(classes);
+    Map *name_assignments = reassign_names(name_counts);
+
+    List *names_list = map_get_keys(name_assignments);
+    for (size_t i = 0; i < list_len(names_list); i++) {
+        String *name = list_get_mutable(names_list, i);
+        String *reassigned_name = map_get_mutable(name_assignments, name);
+
+        printf("%s = %s\n", string_get_c_str(name),
+                            string_get_c_str(reassigned_name));
+    }
+
+    free_list(names_list);
     free_map(name_counts);
-    free_list(names);
+    free_map(name_assignments);
 
     return NULL;
 }

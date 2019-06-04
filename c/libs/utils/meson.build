@@ -4,6 +4,7 @@ utils_src = files(
     'src/copy-interface.c',
     'src/list.c',
     'src/map.c',
+    'src/set.c',
     'src/stream.c',
     'src/string.c',
 )

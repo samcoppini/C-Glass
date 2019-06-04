@@ -61,6 +61,10 @@ void list_add(List *list, const void *val) {
     list->len++;
 }
 
+void list_sort(List *list, int (*cmp)(const void *, const void *)) {
+    qsort(list->elements, list->len, sizeof(void *), cmp);
+}
+
 void *list_pop(List *list) {
     assert(list->len > 0);
 

@@ -23,6 +23,9 @@ void free_list(List *list);
 // Copies an element to the end of a list
 void list_add(List *list, const void *val);
 
+// Sorts the list, using the cmp function to compare elements
+void list_sort(List *list, int (*cmp)(const void *, const void *));
+
 // Removes the last element from a list, and returns it
 void *list_pop(List *list);
 

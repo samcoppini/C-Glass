@@ -27,4 +27,6 @@ bool class_has_func(const GlassClass *gclass, const struct String *name);
 const struct GlassFunction *class_get_func(const GlassClass *gclass,
                                            const struct String *name);
 
+struct List *class_get_func_names(const GlassClass *gclass);
+
 #endif

@@ -1,6 +1,8 @@
 #ifndef UTILS_SET_H
 #define UTILS_SET_H
 
+#include <stdbool.h>
+
 typedef struct Set Set;
 struct HashInterface;
 
