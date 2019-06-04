@@ -263,7 +263,7 @@ Map *reassign_names(const Map *name_counts) {
 
     String *local_name = string_from_chars("_`");
     String *classwide_name = string_from_char('`');
-    String *global_name = string_from_char('`');
+    String *global_name = string_from_char('@');
 
     for (size_t i = 0; i < list_len(sorted_names); i++) {
         const NameCount *name_count = list_get(sorted_names, i);
