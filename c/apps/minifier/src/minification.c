@@ -180,6 +180,12 @@ void add_name(const Map *classes, Map *name_counts, List *class_names,
             }
         }
 
+        const List *parents = class_get_parents(gclass);
+        for (size_t i = 0; i < list_len(parents); i++) {
+            const String *parent_name = list_get(parents, i);
+            add_name(classes, name_counts, class_names, func_names, parent_name);
+        }
+
         free_list(func_name_copy);
     }
 }

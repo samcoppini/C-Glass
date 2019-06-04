@@ -172,6 +172,10 @@ const String *class_get_name(const GlassClass *gclass) {
     return gclass->name;
 }
 
+const List *class_get_parents(const GlassClass *gclass) {
+    return gclass->parents;
+}
+
 bool class_has_func(const GlassClass *gclass, const String *name) {
     return map_has(gclass->funcs, name);
 }
