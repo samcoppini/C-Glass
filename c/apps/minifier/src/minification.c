@@ -209,9 +209,11 @@ Set *get_fixed_names(const Map *name_counts) {
 
     String *main_class_name = string_from_char('M');
     String *main_func_name = string_from_char('m');
+    String *ctor_name = string_from_chars("c__");
 
     set_add(fixed_names, main_class_name);
     set_add(fixed_names, main_func_name);
+    set_add(fixed_names, ctor_name);
 
     List *builtin_classes = map_get_keys(builtins);
     for (size_t i = 0; i < list_len(builtin_classes); i++) {
@@ -235,6 +237,7 @@ Set *get_fixed_names(const Map *name_counts) {
 
     free_string(main_class_name);
     free_string(main_func_name);
+    free_string(ctor_name);
     free_list(builtin_classes);
     free_list(empty_list);
     free_map(builtins);
