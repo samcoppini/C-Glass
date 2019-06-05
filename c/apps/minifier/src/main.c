@@ -57,7 +57,10 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    minify_glass_classes(classes);
+    String *source = minify_glass_classes(classes);
+    for (size_t i = 0; i < string_len(source); i++) {
+        putchar(string_get(source, i));
+    }
 
     return 0;
 }

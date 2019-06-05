@@ -94,6 +94,8 @@ typedef struct GlassCommand {
     };
 } GlassCommand;
 
+struct String *command_to_str(const GlassCommand *cmd);
+
 extern const struct CopyInterface *CMD_COPY_OPS;
 
 #endif

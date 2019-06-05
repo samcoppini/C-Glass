@@ -307,22 +307,74 @@ Map *reassign_names(const Map *name_counts) {
     return reassigned_names;
 }
 
+void add_name_to_source(String *source, const String *name, const Map *reassigned) {
+    name = map_get(reassigned, name);
+    if (string_len(name) == 1) {
+        string_add_str(source, name);
+    }
+    else {
+        string_add_char(source, '(');
+        string_add_str(source, name);
+        string_add_char(source, ')');
+    }
+}
+
+String *minify_source(const Map *classes, const Map *reassigned_names) {
+    String *minified = new_string();
+
+    List *names_list = map_get_keys(reassigned_names);
+    for (size_t i = 0; i < list_len(names_list); i++) {
+        const String *class_name = list_get(names_list, i);
+        if (!map_has(classes, class_name)) {
+            continue;
+        }
+        const GlassClass *gclass = map_get(classes, class_name);
+        string_add_char(minified, '{');
+        add_name_to_source(minified, class_name, reassigned_names);
+
+        for (size_t j = 0; j < list_len(names_list); j++) {
+            const String *func_name = list_get(names_list, j);
+            if (!class_has_func(gclass, func_name)) {
+                continue;
+            }
+            const GlassFunction *func = class_get_func(gclass, func_name);
+            string_add_char(minified, '[');
+            add_name_to_source(minified, func_name, reassigned_names);
+
+            for (size_t k = 0; k < func_len(func); k++) {
+                const GlassCommand *cmd = func_get_command(func, k);
+                if (cmd->type == CMD_PUSH_NAME) {
+                    add_name_to_source(minified, cmd->str, reassigned_names);
+                }
+                else if (cmd->type == CMD_LOOP_BEGIN) {
+                    string_add_char(minified, '/');
+                    add_name_to_source(minified, cmd->str, reassigned_names);
+                }
+                else {
+                    String *str = command_to_str(cmd);
+                    string_add_str(minified, str);
+                    free_string(str);
+                }
+            }
+
+            string_add_char(minified, ']');
+        }
+
+        string_add_char(minified, '}');
+    }
+    free_list(names_list);
+
+    return minified;
+}
+
 String *minify_glass_classes(const Map *classes) {
     Map *name_counts = get_reachable_names(classes);
     Map *name_assignments = reassign_names(name_counts);
 
-    List *names_list = map_get_keys(name_assignments);
-    for (size_t i = 0; i < list_len(names_list); i++) {
-        String *name = list_get_mutable(names_list, i);
-        String *reassigned_name = map_get_mutable(name_assignments, name);
+    String *minified = minify_source(classes, name_assignments);
 
-        printf("%s = %s\n", string_get_c_str(name),
-                            string_get_c_str(reassigned_name));
-    }
-
-    free_list(names_list);
     free_map(name_counts);
     free_map(name_assignments);
 
-    return NULL;
+    return minified;
 }

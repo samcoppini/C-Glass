@@ -3,6 +3,7 @@
 #include "utils/string.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 void *copy_command(const GlassCommand *cmd) {
     GlassCommand *copy = malloc(sizeof(GlassCommand));
@@ -57,6 +58,92 @@ void free_command(GlassCommand *cmd) {
 
     free_string(cmd->filename);
     free(cmd);
+}
+
+String *command_to_str(const GlassCommand *cmd) {
+    switch (cmd->type) {
+        case CMD_ASSIGN_SELF:
+            return string_from_char('$');
+        case CMD_ASSIGN_VAL:
+            return string_from_char('=');
+        case CMD_EXECUTE_FUNC:
+            return string_from_char('?');
+        case CMD_GET_FUNC:
+            return string_from_char('.');
+        case CMD_GET_VAL:
+            return string_from_char('*');
+        case CMD_LOOP_END:
+            return string_from_char('\\');
+        case CMD_NEW_INST:
+            return string_from_char('!');
+        case CMD_POP_STACK:
+            return string_from_char(',');
+        case CMD_RETURN:
+            return string_from_char('^');
+        case CMD_LOOP_BEGIN: {
+            String *str = string_from_char('/');
+            if (string_len(cmd->str) == 1) {
+                string_add_str(str, cmd->str);
+            }
+            else {
+                string_add_char(str, '(');
+                string_add_str(str, cmd->str);
+                string_add_char(str, ')');
+            }
+            return str;
+        }
+        case CMD_DUPLICATE:
+            if (cmd->index < 10) {
+                return string_from_char(cmd->index + '0');
+            }
+            else {
+                char buf[1000];
+                sprintf(buf, "(%u)", (unsigned) cmd->index);
+                return string_from_chars(buf);
+            }
+        case CMD_PUSH_NAME:
+            if (string_len(cmd->str) == 1) {
+                return copy_string(cmd->str);
+            }
+            else {
+                String *str = string_from_char('(');
+                string_add_str(str, cmd->str);
+                string_add_char(str, ')');
+                return str;
+            }
+        case CMD_PUSH_NUM: {
+            char buf[1000];
+            sprintf(buf, "<%g>", cmd->number);
+            return string_from_chars(buf);
+        }
+        case CMD_PUSH_STR: {
+            String *str = string_from_char('"');
+            for (size_t i = 0; i < string_len(cmd->str); i++) {
+                char c = string_get(cmd->str, i);
+                switch (c) {
+                    case '\n':
+                        string_add_chars(str, "\\n");
+                        break;
+                    case '\r':
+                        string_add_chars(str, "\\r");
+                        break;
+                    case '\t':
+                        string_add_chars(str, "\\t");
+                        break;
+                    case '"':
+                        string_add_chars(str, "\\\"");
+                        break;
+                    default:
+                        string_add_char(str, c);
+                        break;
+                }
+            }
+            string_add_char(str, '"');
+            return str;
+        }
+        default:
+            return new_string();
+    }
 }
 
 static void *copy_command_generic(const void *cmd) {
