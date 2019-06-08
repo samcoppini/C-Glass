@@ -116,11 +116,22 @@ void add_name(const Map *classes, Map *name_counts, List *class_names,
 void count_names_in_func(const Map *classes, Map *name_counts, List *class_names,
                          List *func_names, const GlassFunction *func)
 {
+    const String *last_name = NULL;
+
     for (size_t i = 0; i < func_len(func); i++) {
         const GlassCommand *cmd = func_get_command(func, i);
 
-        if (cmd->type == CMD_PUSH_NAME || cmd->type == CMD_LOOP_BEGIN) {
-            add_name(classes, name_counts, class_names, func_names, cmd->str);
+        if (cmd->type == CMD_PUSH_NAME) {
+            if (last_name == NULL || !strings_equal(last_name, cmd->str)) {
+                add_name(classes, name_counts, class_names, func_names, cmd->str);
+            }
+            last_name = cmd->str;
+        }
+        else {
+            if (cmd->type == CMD_LOOP_BEGIN) {
+                add_name(classes, name_counts, class_names, func_names, cmd->str);
+            }
+            last_name = NULL;
         }
     }
 }
@@ -338,22 +349,32 @@ String *minify_source(const Map *classes, const Map *reassigned_names) {
                 continue;
             }
             const GlassFunction *func = class_get_func(gclass, func_name);
+            const String *last_name = NULL;
             string_add_char(minified, '[');
             add_name_to_source(minified, func_name, reassigned_names);
 
             for (size_t k = 0; k < func_len(func); k++) {
                 const GlassCommand *cmd = func_get_command(func, k);
                 if (cmd->type == CMD_PUSH_NAME) {
-                    add_name_to_source(minified, cmd->str, reassigned_names);
-                }
-                else if (cmd->type == CMD_LOOP_BEGIN) {
-                    string_add_char(minified, '/');
-                    add_name_to_source(minified, cmd->str, reassigned_names);
+                    if (last_name != NULL && strings_equal(last_name, cmd->str)) {
+                        string_add_char(minified, '0');
+                    }
+                    else {
+                        add_name_to_source(minified, cmd->str, reassigned_names);
+                        last_name = cmd->str;
+                    }
                 }
                 else {
-                    String *str = command_to_str(cmd);
-                    string_add_str(minified, str);
-                    free_string(str);
+                    if (cmd->type == CMD_LOOP_BEGIN) {
+                        string_add_char(minified, '/');
+                        add_name_to_source(minified, cmd->str, reassigned_names);
+                    }
+                    else {
+                        String *str = command_to_str(cmd);
+                        string_add_str(minified, str);
+                        free_string(str);
+                    }
+                    last_name = NULL;
                 }
             }
 
