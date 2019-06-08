@@ -1,0 +1,119 @@
+{(ListNode)
+    [(c__)
+        (_depth)1=,
+        /(_depth)
+            (_a)A!
+            (_newDepth)(_depth)*<1>(_a)s.?=
+            (_newDepth)*(left)(ListNode)!
+            (_newDepth)*(right)(ListNode)!
+            ^
+        \
+    ]
+
+    [(getLeft)
+        (left)*
+    ]
+
+    [(getRight)
+        (right)*
+    ]
+
+    [(setLeft)
+        (left)1=,
+    ]
+
+    [(setRight)
+        (right)1=,
+    ]
+
+    [(getData)
+        (data)*
+    ]
+
+    [(setData)
+        (data)1=,
+    ]
+}
+
+{(List)
+    [(c__)
+        (length)<0>=
+        (maxSize)<1>=
+        (depth)<1>=
+        <0>(root)(ListNode)!
+    ]
+
+    [(getLength)
+        (length)*
+    ]
+
+    [(getNode)
+        (_index)1=,
+        (_a)A!
+
+        (_lo)<0>=
+        (_hi)(maxSize)*<1>(_a)s.?=
+        (_mid)(_lo)*(_hi)*(_a)a.?<2>(_a)d.?=
+
+        (_node)(root)*=
+        (_cmp)(_index)*(_mid)*(_a)(ne).?=
+        /(_cmp)
+            (_lt)(_index)*(_mid)*(_a)(lt).?=
+            /(_lt)
+                (_hi)(_mid)*<1>(_a)s.?=
+                (_node)(_node)(getLeft).?=
+                (_lt)<0>=
+            \
+
+            (_gt)(_index)*(_mid)*(_a)(gt).?=
+            /(_gt)
+                (_lo)(_mid)*<1>(_a)a.?=
+                (_node)(_node)(getRight).?=
+                (_gt)<0>=
+            \
+
+            (_mid)(_lo)*(_hi)*(_a)a.?<2>(_a)d.?=
+            (_cmp)(_index)*(_mid)*(_a)(ne).?=
+        \
+
+        (_node)*
+    ]
+
+    [(increaseSize)
+        (_a)A!
+
+        <0>(_newRoot)(ListNode)!
+        (depth)*(_newRight)(ListNode)!
+        (root)*(_newRoot)(setLeft).?
+        (_newRight)*(_newRoot)(setRight).?
+        (root)(_newRoot)*=
+
+        (depth)(depth)*<1>(_a)a.?=
+        (maxSize)(maxSize)*<2>(_a)m.?<1>(_a)a.?=
+    ]
+
+    [(add)
+        (_data)1=,
+        (_this)$
+        (_a)A!
+
+        (_index)(length)*=    
+        (length)(length)*<1>(_a)a.?=
+        (_tmp)(length)*(maxSize)*(_a)(gt).?=
+        /(_tmp)
+            (_this)(increaseSize).?
+            (_tmp)<0>=
+        \
+
+        (_node)(_index)*(_this)(getNode).?=
+        (_data)*(_node)(setData).?
+    ]
+
+    [(get)
+        (_index)1=,
+        (_this)$
+
+        (_node)(_index)*(_this)(getNode).?=
+        (_node)(getData).?
+    ]
+}
