@@ -343,6 +343,12 @@ String *minify_source(const Map *classes, const Map *reassigned_names) {
         string_add_char(minified, '{');
         add_name_to_source(minified, class_name, reassigned_names);
 
+        const List *parents_list = class_get_parents(gclass);
+        for (size_t j = 0; j < list_len(parents_list); j++) {
+            const String *parent_name = list_get(parents_list, j);
+            add_name_to_source(minified, parent_name, reassigned_names);
+        }
+
         for (size_t j = 0; j < list_len(names_list); j++) {
             const String *func_name = list_get(names_list, j);
             if (!class_has_func(gclass, func_name)) {
