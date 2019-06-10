@@ -14,9 +14,11 @@ foreach test : tests
         args: [
             './test-interpreter.py',
             '--exe', interpreter_exe.full_path(),
-            '--src', test_src,
             '--expected', test_out,
-        ],
+            test_src,
+        ] + glass_lib_paths,
         workdir: meson.current_source_dir(),
+        suite: ['glass-test'],
     )
+
 endforeach

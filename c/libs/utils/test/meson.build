@@ -14,5 +14,5 @@ foreach test: test_files
         dependencies: [utils_dep, test_dep],
     )
 
-    test(test_name + '-test', test_exe)
+    test(test_name + '-test', test_exe, suite: ['c-tests'])
 endforeach

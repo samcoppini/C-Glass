@@ -145,7 +145,7 @@ int main() {
     ASSERT_NULL(get_classes("{M[m]}{M[m]}"));
     ASSERT_NULL(get_classes("{MNN[m]}{N}"));
     ASSERT_NULL(get_classes("{MZ[m]}"));
-    ASSERT_NULL(get_classes("{MN[m]}{N}"));
+    ASSERT_NULL(get_classes("{MN[m]}{NM}"));
 
     return test_status();
 }

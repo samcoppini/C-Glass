@@ -8,4 +8,4 @@ parser_test_exe = executable(
     dependencies: [glasstypes_dep, parser_dep, test_dep, utils_dep],
 )
 
-test('parser-test', parser_test_exe)
+test('parser-test', parser_test_exe, suite: ['c-tests'])

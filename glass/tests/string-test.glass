@@ -1,0 +1,15 @@
+{M
+    [m
+        (_a)A!
+        (_o)(Output)!
+        (_s)(String)!
+
+        "Testing String.cmp:"(_o)(ol).?
+
+        "hey""hey"(_s)(cmp).?<0>(_a)e.?(_o)(onl).?
+        "heyy""hey"(_s)(cmp).?<0>(_a)(gt).?(_o)(onl).?
+        "hey""heyy"(_s)(cmp).?<0>(_a)(lt).?(_o)(onl).?
+        "abc""bcde"(_s)(cmp).?<0>(_a)(lt).?(_o)(onl).?
+        "vbc""bcde"(_s)(cmp).?<0>(_a)(gt).?(_o)(onl).?
+    ]
+}
