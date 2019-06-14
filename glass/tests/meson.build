@@ -1,6 +1,7 @@
 tests = [
     ['builtin-A-test', 'builtin-math.glass', 'builtin-math.out'],
-    ['builtin-S-test',  'builtin-str.glass', 'builtin-str.out' ],
+    ['builtin-S-test', 'builtin-str.glass',  'builtin-str.out' ],
+    ['string-test',    'string-test.glass',  'string-test.out' ],
 ]
 
 foreach test : tests
