@@ -1,6 +1,7 @@
 glass_libs = [
     'bool.glass',
     'list.glass',
+    'map.glass',
     'math.glass',
     'null.glass',
     'output.glass',

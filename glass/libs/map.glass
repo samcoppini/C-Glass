@@ -1,0 +1,91 @@
+{(MapNode)(Nullable)
+    [(c__)
+        (next)1=,
+        (val)1=,
+        (key)1=,
+    ]
+
+    [(getKey)
+        (key)*
+    ]
+
+    [(getVal)
+        (val)*
+    ]
+
+    [(setVal)
+        (val)1=,
+    ]
+
+    [(getNext)
+        (next)*
+    ]
+}
+
+{(Map)
+    [(c__)
+        (cmp)1=,
+        (first)(Null)!
+    ]
+
+    [(has)
+        (_key)1=,
+
+        (_a)A!
+
+        (_node)(first)*=
+        (_notEnded)(_node)(notNull).?=
+
+        /(_notEnded)
+            (_foundKey)(_node)(getKey).?(_key)*(cmp)*?<0>(_a)e.?=
+            /(_foundKey)
+                <1>^
+            \
+
+            (_node)(_node)(getNext).?=
+            (_notEnded)(_node)(notNull).?=
+        \
+
+        <0>
+    ]
+
+    [(get)
+        (_key)1=,
+
+        (_a)A!
+
+        (_node)(first)*=
+        (_true)<1>=
+
+        /(_true)
+            (_sameKey)(_node)(getKey).?(_key)*(cmp)*?<0>(_a)e.?=
+            /(_sameKey)
+                (_node)(getVal).?^
+            \
+
+            (_node)(_node)(getNext).?=
+        \
+    ]
+
+    [(set)
+        (_val)1=,
+        (_key)1=,
+
+        (_a)A!
+
+        (_node)(first)*=
+        (_notEnded)(_node)(notNull).?=
+
+        /(_notEnded)
+            (_foundKey)(_node)(getKey).?(_key)*(cmp)*?<0>(_a)e.?=
+            /(_foundKey)
+                (_val)*(_node)(setVal).?^
+            \
+
+            (_node)(_node)(getNext).?=
+            (_notEnded)(_node)(notNull).?=
+        \
+
+        (_key)*(_val)*(first)*(first)(MapNode)!
+    ]
+}

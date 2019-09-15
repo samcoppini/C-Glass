@@ -1,6 +1,7 @@
 tests = [
     ['builtin-A-test', 'builtin-math.glass', 'builtin-math.out'],
     ['builtin-S-test', 'builtin-str.glass',  'builtin-str.out' ],
+    ['map-test',       'map-test.glass',     'map-test.out'    ],
     ['string-test',    'string-test.glass',  'string-test.out' ],
 ]
 

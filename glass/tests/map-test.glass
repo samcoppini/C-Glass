@@ -1,0 +1,21 @@
+{M
+    [m
+        (_s)(String)!
+        (_o)(Output)!
+
+        (_s)(cmp).(_strMap)(Map)!
+
+        "foo""bar"(_strMap)(set).?
+        "foooo""!!!!"(_strMap)(set).?
+
+        "Testing Map.has:"(_o)(ol).?
+        "bar"(_strMap)(has).?(_o)(onl).?
+        "foo"(_strMap)(has).?(_o)(onl).?
+
+        "Testing Map.get:"(_o)(ol).?
+        "foo"(_strMap)(get).?(_o)(ol).?
+        "foooo"(_strMap)(get).?(_o)(ol).?
+        "foo""quux"(_strMap)(set).?
+        "foo"(_strMap)(get).?(_o)(ol).?
+    ]
+}
