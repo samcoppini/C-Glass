@@ -77,7 +77,19 @@ bool resolve_inheritance(Map *class_builders, const String *class_name, List *cl
         list_add(class_chain, class_name);
 
         for (size_t i = 0; i < list_len(builder->parents); i++) {
-            const String *parent_name = list_get(builder->parents, i);
+            String *parent_name = list_get_mutable(builder->parents, i);
+
+            // Make sure we don't inherit from the same parent twice
+            for (size_t j = 0; j < i; j++) {
+                const String *other_parent_name = list_get(builder->parents, j);
+                if (strings_equal(parent_name, other_parent_name)) {
+                    fprintf(stderr, "Error! %s inherits from %s multiple times!\n",
+                                    string_get_c_str(builder->name),
+                                    string_get_c_str(parent_name));
+                    return true;
+                }
+            }
+
             if (resolve_inheritance(class_builders, parent_name, class_chain)) {
                 return true;
             }
