@@ -5,8 +5,11 @@
 
 typedef struct Set Set;
 struct HashInterface;
+struct List;
 
 Set *new_set(const struct HashInterface *hash_ops);
+
+struct List *set_to_list(const Set *set);
 
 void free_set(Set *set);
 

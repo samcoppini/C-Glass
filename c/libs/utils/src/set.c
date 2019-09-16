@@ -1,10 +1,15 @@
 #include "utils/set.h"
 #include "utils/copy-interface.h"
+#include "utils/list.h"
 #include "utils/map.h"
 
 Set *new_set(const struct HashInterface *hash_ops) {
     Set *set = (Set *) new_map(hash_ops, INT_COPY_OPS);
     return set;
+}
+
+List *set_to_list(const Set *set) {
+    return map_get_keys(set);
 }
 
 void free_set(Set *set) {
