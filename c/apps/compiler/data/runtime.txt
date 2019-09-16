@@ -1,9 +1,58 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-enum Type {
+typedef enum Type {
+    TYPE_FUNC,
+    TYPE_INST,
     TYPE_NAME,
     TYPE_NUMBER,
     TYPE_STRING,
-};
+} Type;
+
+struct GlassInstance;
+struct Map;
+
+typedef struct GlassClass {
+    void (*funcs[NUM_NAMES])(GlassInstance *);
+} GlassClass;
+
+typedef struct GlassInstance {
+    const GlassClass *gclass;
+
+    struct Map *vars;
+} GlassInstance;
+
+typedef struct GlassFunction {
+    GlassInstance *inst;
+
+    void (*func)(GlassInstance *);
+} GlassFunction;
+
+typedef struct String {
+    char *buf;
+
+    unsigned ref_count;
+
+    size_t alloc;
+
+    size_t len;
+} String;
+
+typedef struct GlassValue {
+    Type type;
+
+    union {
+        struct {
+            Name name;
+
+            GlassInstance *inst;
+
+            GlassFunction *func;
+
+            String *str;
+
+            double num;
+        };
+    };
+} GlassValue;
 
