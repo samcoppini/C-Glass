@@ -9,7 +9,7 @@ Set *new_set(const struct HashInterface *hash_ops) {
 }
 
 List *set_to_list(const Set *set) {
-    return map_get_keys(set);
+    return map_get_keys((Map *) set);
 }
 
 void free_set(Set *set) {

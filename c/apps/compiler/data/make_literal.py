@@ -1,7 +1,10 @@
 import argparse
 
 def make_literal(array_name: str, data: str) -> str:
-    lines = ['const char *' + array_name + '[] = {']
+    lines = [
+        '#include <stddef.h>',
+        'const char *' + array_name + '[] = {'
+    ]
 
     for line in data.splitlines():
         line = line.replace('\\', '\\\\')
@@ -9,7 +12,7 @@ def make_literal(array_name: str, data: str) -> str:
 
     lines.append('};')
 
-    lines.append('const size_t ' + array_name + '_LINES = ' + str(len(lines) - 2) + ';')
+    lines.append('const size_t ' + array_name + '_LINES = ' + str(len(lines) - 3) + ';')
 
     return '\n'.join(lines)
 
