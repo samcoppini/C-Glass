@@ -1,13 +1,16 @@
 import argparse
 
 def make_literal(array_name: str, data: str) -> str:
-    lines = ['const char *', array_name, '[] = {']
+    lines = ['const char *' + array_name + '[] = {']
 
     for line in data.splitlines():
         line = line.replace('\\', '\\\\')
         lines.append(f'"{line}",')
 
     lines.append('};')
+
+    lines.append('const size_t ' + array_name + '_LINES = ' + str(len(lines) - 2) + ';')
+
     return '\n'.join(lines)
 
 parser = argparse.ArgumentParser()
@@ -20,4 +23,4 @@ with open(args.source, 'r') as file:
     data = file.read()
 
 with open(args.out_name, 'w') as file:
-    file.write(make_literal(data))
+    file.write(make_literal(args.array_name, data))

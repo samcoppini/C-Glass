@@ -7,6 +7,10 @@
 #include "utils/set.h"
 #include "utils/string.h"
 
+extern const char *RUNTIME_LIBRARY[];
+
+extern const size_t RUNTIME_LIBRARY_LINES;
+
 Set *get_all_names(const Map *classes) {
     List *class_names = map_get_keys(classes);
     Set *all_names = new_set(STRING_HASH_OPS);
@@ -52,16 +56,24 @@ void generate_name_enum(String *code, const Map *classes) {
         string_add_char(code, ',');
     }
 
-    string_add_chars(code, "\n};\n");
+    string_add_chars(code, "\n};\n\n");
 
     free_set(name_set);
     free_list(names);
+}
+
+void add_runtime_library(String *code) {
+    for (size_t i = 0; i < RUNTIME_LIBRARY_LINES; i++) {
+        string_add_chars(code, RUNTIME_LIBRARY[i]);
+        string_add_char(code, '\n');
+    }
 }
 
 String *compile_classes(const Map *classes) {
     String *code = new_string();
 
     generate_name_enum(code, classes);
+    add_runtime_library(code);
 
     return code;
 }

@@ -6,3 +6,4 @@ enum Type {
     TYPE_NUMBER,
     TYPE_STRING,
 };
+
