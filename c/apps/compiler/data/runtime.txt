@@ -86,6 +86,27 @@ void free_value(GlassValue *val) {
     }
 }
 
+typedef struct Map {
+    Name *names;
+
+    GlassValue **values;    
+
+    size_t len;
+
+    size_t alloc;
+} Map;
+
+void free_map(Map *map) {
+    if (map != NULL) {
+        for (size_t i = 0; i < map->alloc; i++) {
+            free_value(map->values[i]);
+        }
+        free(map->names);
+        free(map->values);
+        free(map);
+    }
+}
+
 struct Stack {
     GlassValue **values;
 
@@ -102,7 +123,7 @@ void init_stack() {
 
 void free_stack() {
     for (size_t i = 0; i < stack.len; i++) {
-        free_value(stack[i]);
+        free_value(stack.values[i]);
     }
 }
 
@@ -117,7 +138,7 @@ size_t num_insts;
 #define INIT_INSTANCES 1024
 
 void init_instances() {
-    insts_used = calloc(INIT_INSTANCES, sizeof(bool))
+    insts_used = calloc(INIT_INSTANCES, sizeof(bool));
     instances = malloc(INIT_INSTANCES * sizeof(GlassInstance));
     num_insts = INIT_INSTANCES;
     cur_inst = 0;
@@ -141,9 +162,9 @@ void free_instances() {
 void do_garbage_collection() {
     size_t new_num_insts = num_insts * 2;
     GlassInstance *new_insts = malloc(sizeof(GlassInstance) * new_num_insts);
-    bool *new_insts_used = calloc(new_num_insts * sizeof(bool));
+    bool *new_insts_used = calloc(new_num_insts, sizeof(bool));
 
-    memcpy(new_num_insts, insts_used, sizeof(bool) * num_insts);
+    memcpy(new_insts_used, insts_used, sizeof(bool) * num_insts);
     memcpy(new_insts, instances, sizeof(GlassInstance) * num_insts);
 
     free(insts_used);
@@ -164,5 +185,5 @@ size_t new_instance(const GlassClass *gclass) {
         cur_inst++;
     }
     do_garbage_collection();
-    return new_instance;
+    return new_instance(gclass);
 }
