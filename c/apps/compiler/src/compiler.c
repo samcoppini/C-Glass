@@ -69,7 +69,7 @@ void generate_name_enum(String *code, const Map *classes) {
     Set *name_set = get_all_names(classes);
     List *names = set_to_list(name_set);
 
-    string_add_chars(code, "enum Name {");
+    string_add_chars(code, "typedef enum Name {");
 
     for (size_t i = 0; i < list_len(names); i++) {
         string_add_chars(code, "\n    NAME_");
@@ -78,7 +78,7 @@ void generate_name_enum(String *code, const Map *classes) {
     }
 
     string_add_chars(code, "    NUM_NAMES\n");
-    string_add_chars(code, "\n};\n\n");
+    string_add_chars(code, "\n} Name;\n\n");
 
     free_set(name_set);
     free_list(names);
@@ -136,10 +136,18 @@ void generate_functions(String *code, const Map *classes) {
 void generate_class_definitions(String *code, const Map *classes) {
     List *class_names = map_get_keys(classes);
 
+    String *classes_array = string_from_chars("const GlassClass *CLASSES_ARRAY[NUM_NAMES] = {\n");
+
     for (size_t i = 0; i < list_len(class_names); i++) {
         const String *class_name = list_get(class_names, i);
         const GlassClass *gclass = map_get(classes, class_name);
         List *func_names = class_get_func_names(gclass);
+
+        string_add_chars(classes_array, "    [NAME_");
+        string_add_str(classes_array, class_name);
+        string_add_chars(classes_array, "] = &C_");
+        string_add_str(classes_array, class_name);
+        string_add_chars(classes_array, ",\n");
 
         string_add_chars(code, "const GlassClass C_");
         string_add_str(code, class_name);
@@ -163,6 +171,10 @@ void generate_class_definitions(String *code, const Map *classes) {
         free_list(func_names);
     }
 
+    string_add_chars(classes_array, "};\n\n");
+    string_add_str(code, classes_array);
+
+    free_string(classes_array);
     free_list(class_names);
 }
 

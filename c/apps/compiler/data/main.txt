@@ -2,6 +2,9 @@ int main(int argc, char **argv) {
     init_instances();
     init_stack();
 
+    size_t main_obj = new_instance(&C_M);
+    f1M1m(main_obj);
+
     free_stack();
     free_instances();
 }
