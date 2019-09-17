@@ -105,7 +105,7 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
 
     string_add_chars(code, "void ");
     string_add_str(code, mangled_name);
-    string_add_chars(code, "() {\n");
+    string_add_chars(code, "(size_t inst_index) {\n");
 
     string_add_chars(code, "}\n\n");
 
@@ -149,25 +149,37 @@ void generate_class_definitions(String *code, const Map *classes) {
         string_add_str(classes_array, class_name);
         string_add_chars(classes_array, ",\n");
 
-        string_add_chars(code, "const GlassClass C_");
-        string_add_str(code, class_name);
-        string_add_chars(code, " = {\n    {\n");
+        String *forward_decls = new_string();
+        String *gclass_def = new_string();
+
+        string_add_chars(gclass_def, "const GlassClass C_");
+        string_add_str(gclass_def, class_name);
+        string_add_chars(gclass_def, " = {\n    {\n");
 
         for (size_t j = 0; j < list_len(func_names); j++) {
             const String *func_name = list_get(func_names, j);
             String *mangled_name = mangle_name(class_name, func_name);
 
-            string_add_chars(code, "        [NAME_");
-            string_add_str(code, func_name);
-            string_add_chars(code, "] = ");
-            string_add_str(code, mangled_name);
-            string_add_chars(code, ",\n");
+            string_add_chars(forward_decls, "void ");
+            string_add_str(forward_decls, mangled_name);
+            string_add_chars(forward_decls, "(size_t);\n");
+
+            string_add_chars(gclass_def, "        [NAME_");
+            string_add_str(gclass_def, func_name);
+            string_add_chars(gclass_def, "] = ");
+            string_add_str(gclass_def, mangled_name);
+            string_add_chars(gclass_def, ",\n");
 
             free_string(mangled_name);
         }
 
-        string_add_chars(code, "    }\n};\n\n");
+        string_add_chars(gclass_def, "    }\n};\n\n");
 
+        string_add_str(code, forward_decls);
+        string_add_str(code, gclass_def);
+
+        free_string(gclass_def);
+        free_string(forward_decls);
         free_list(func_names);
     }
 
