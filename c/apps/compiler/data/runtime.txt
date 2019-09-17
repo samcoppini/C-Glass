@@ -1,5 +1,8 @@
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef enum Type {
     TYPE_FUNC,
@@ -13,7 +16,7 @@ struct GlassInstance;
 struct Map;
 
 typedef struct GlassClass {
-    void (*funcs[NUM_NAMES])(GlassInstance *);
+    void (*funcs[NUM_NAMES])(size_t);
 } GlassClass;
 
 typedef struct GlassInstance {
@@ -25,7 +28,7 @@ typedef struct GlassInstance {
 typedef struct GlassFunction {
     GlassInstance *inst;
 
-    void (*func)(GlassInstance *);
+    void (*func)(size_t);
 } GlassFunction;
 
 typedef struct String {
@@ -38,7 +41,17 @@ typedef struct String {
     size_t len;
 } String;
 
+void free_string(String *str) {
+    str->ref_count--;
+    if (str->ref_count == 0) {
+        free(str->buf);
+        free(str);
+    }
+}
+
 typedef struct GlassValue {
+    unsigned ref_count;
+
     Type type;
 
     union {
@@ -56,3 +69,100 @@ typedef struct GlassValue {
     };
 } GlassValue;
 
+GlassValue *copy_value(GlassValue *val) {
+    val->ref_count++;
+    return val;
+}
+
+void free_value(GlassValue *val) {
+    val->ref_count--;
+    if (val->ref_count == 0) {
+        switch (val->type) {
+            case TYPE_STRING:
+                free_string(val->str);
+                break;
+        }
+        free(val);
+    }
+}
+
+struct Stack {
+    GlassValue **values;
+
+    size_t len;
+
+    size_t alloc;
+} stack;
+
+void init_stack() {
+    stack.alloc = 16;
+    stack.values = malloc(sizeof(GlassValue *) * stack.alloc);
+    stack.len = 0;
+}
+
+void free_stack() {
+    for (size_t i = 0; i < stack.len; i++) {
+        free_value(stack[i]);
+    }
+}
+
+GlassInstance *instances;
+
+bool *insts_used;
+
+size_t cur_inst;
+
+size_t num_insts;
+
+#define INIT_INSTANCES 1024
+
+void init_instances() {
+    insts_used = calloc(INIT_INSTANCES, sizeof(bool))
+    instances = malloc(INIT_INSTANCES * sizeof(GlassInstance));
+    num_insts = INIT_INSTANCES;
+    cur_inst = 0;
+}
+
+void free_instance(GlassInstance *inst) {
+    free_map(inst->vars);
+}
+
+void free_instances() {
+    for (size_t i = 0; i < num_insts; i++) {
+        if (insts_used[i]) {
+            free_instance(&instances[i]);
+        }
+    }
+
+    free(instances);
+    free(insts_used);
+}
+
+void do_garbage_collection() {
+    size_t new_num_insts = num_insts * 2;
+    GlassInstance *new_insts = malloc(sizeof(GlassInstance) * new_num_insts);
+    bool *new_insts_used = calloc(new_num_insts * sizeof(bool));
+
+    memcpy(new_num_insts, insts_used, sizeof(bool) * num_insts);
+    memcpy(new_insts, instances, sizeof(GlassInstance) * num_insts);
+
+    free(insts_used);
+    free(instances);
+
+    insts_used = new_insts_used;
+    instances = new_insts;
+    num_insts = new_num_insts;
+    cur_inst = 0;
+}
+
+size_t new_instance(const GlassClass *gclass) {
+    while (cur_inst < num_insts) {
+        if (!insts_used[cur_inst]) {
+            insts_used[cur_inst] = true;
+            return cur_inst++;
+        }
+        cur_inst++;
+    }
+    do_garbage_collection();
+    return new_instance;
+}

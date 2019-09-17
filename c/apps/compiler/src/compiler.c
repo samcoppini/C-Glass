@@ -13,6 +13,10 @@ extern const char *RUNTIME_LIBRARY[];
 
 extern const size_t RUNTIME_LIBRARY_LINES;
 
+extern const char *MAIN_FUNC[];
+
+extern const size_t MAIN_FUNC_LINES;
+
 String *mangle_name(const String *class_name, const String *func_name) {
     String *new_name = string_from_char('f');
     char buf[80];
@@ -83,6 +87,13 @@ void generate_name_enum(String *code, const Map *classes) {
 void add_runtime_library(String *code) {
     for (size_t i = 0; i < RUNTIME_LIBRARY_LINES; i++) {
         string_add_chars(code, RUNTIME_LIBRARY[i]);
+        string_add_char(code, '\n');
+    }
+}
+
+void add_main_func(String *code) {
+    for (size_t i = 0; i < MAIN_FUNC_LINES; i++) {
+        string_add_chars(code, MAIN_FUNC[i]);
         string_add_char(code, '\n');
     }
 }
@@ -162,6 +173,7 @@ String *compile_classes(const Map *classes) {
     add_runtime_library(code);
     generate_class_definitions(code, classes);
     generate_functions(code, classes);
+    add_main_func(code);
 
     return code;
 }
