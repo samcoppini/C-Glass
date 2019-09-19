@@ -56,17 +56,15 @@ typedef struct GlassValue {
     Type type;
 
     union {
-        struct {
-            Name name;
+        Name name;
 
-            GlassInstance *inst;
+        GlassInstance *inst;
 
-            GlassFunction *func;
+        GlassFunction *func;
 
-            String *str;
+        String *str;
 
-            double num;
-        };
+        double num;
     };
 } GlassValue;
 

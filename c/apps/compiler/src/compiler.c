@@ -98,6 +98,30 @@ void add_main_func(String *code) {
     }
 }
 
+void add_indents(String *code, int indent_level) {
+    for (int i = 0; i < indent_level; i++) {
+        string_add_chars(code, "    ");
+    }
+}
+
+void generate_name_literals(String *code, const Map *classes) {
+    Set *name_set = get_all_names(classes);
+    List *names = set_to_list(name_set);
+
+    for (size_t i = 0; i < list_len(names); i++) {
+        const String *name = list_get(names, i);
+
+        string_add_chars(code, "GlassValue nameValue_");
+        string_add_str(code, name);
+        string_add_chars(code, " = { .ref_count = 1, .type = TYPE_NAME, .name = NAME_");
+        string_add_str(code, name);
+        string_add_chars(code, "};\n");
+    }
+
+    free_list(names);
+    free_set(name_set);
+}
+
 void generate_function(String *code, const GlassClass *gclass, const GlassFunction *func) {
     const String *class_name = class_get_name(gclass);
     const String *func_name = func_get_name(func);
@@ -106,6 +130,26 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
     string_add_chars(code, "void ");
     string_add_str(code, mangled_name);
     string_add_chars(code, "(size_t inst_index) {\n");
+
+    int indent_level = 1;
+
+    for (size_t i = 0; i < func_len(func); i++) {
+        const GlassCommand *cmd = func_get_command(func, i);
+
+        add_indents(code, indent_level);
+
+        switch (cmd->type) {
+            case CMD_PUSH_NAME: 
+                string_add_chars(code, "nameValue_");
+                string_add_str(code, cmd->str);
+                string_add_chars(code, ".ref_count++;\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "stack_push(&nameValue_");
+                string_add_str(code, cmd->str);
+                string_add_chars(code, ");\n");
+                break;
+        }
+    }
 
     string_add_chars(code, "}\n\n");
 
@@ -195,6 +239,7 @@ String *compile_classes(const Map *classes) {
 
     generate_name_enum(code, classes);
     add_runtime_library(code);
+    generate_name_literals(code, classes);
     generate_class_definitions(code, classes);
     generate_functions(code, classes);
     add_main_func(code);
