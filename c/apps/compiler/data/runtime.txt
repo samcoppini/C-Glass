@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -125,6 +126,20 @@ void free_stack() {
     for (size_t i = 0; i < stack.len; i++) {
         free_value(stack.values[i]);
     }
+}
+
+void stack_push(GlassValue *value) {
+    if (stack.len == stack.alloc) {
+        stack.alloc *= 2;
+        stack.values = realloc(stack.values, sizeof(GlassValue *) * stack.alloc);
+    }
+    stack.values[stack.len++] = value;
+}
+
+GlassValue *stack_pop() {
+    assert(stack.len > 0);
+    stack.len--;
+    return stack.values[stack.len];
 }
 
 GlassInstance *instances;
