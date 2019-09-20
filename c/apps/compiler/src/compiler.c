@@ -72,7 +72,7 @@ String *make_quoted_string(const String *str) {
     }
 
     string_add_char(quoted, '"');
-    return;
+    return quoted;
 }
 
 Set *get_all_names(const Map *classes) {
@@ -141,7 +141,7 @@ void generate_name_enum(String *code, const Map *classes) {
     Set *name_set = get_all_names(classes);
     List *names = set_to_list(name_set);
 
-    string_add_chars(code, "typedef enum Name {");
+    string_add_chars(code, "typedef enum Name {\n    NO_NAME,");
 
     for (size_t i = 0; i < list_len(names); i++) {
         string_add_chars(code, "\n    NAME_");
@@ -239,13 +239,16 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
 
     int indent_level = 1;
 
+    add_indents(code, indent_level);
+    string_add_chars(code, "Map *local_vars = new_map();\n");
+
     for (size_t i = 0; i < func_len(func); i++) {
         const GlassCommand *cmd = func_get_command(func, i);
 
         add_indents(code, indent_level);
 
         switch (cmd->type) {
-            case CMD_PUSH_NAME: 
+            case CMD_PUSH_NAME: { 
                 string_add_chars(code, "nameValue_");
                 string_add_str(code, cmd->str);
                 string_add_chars(code, ".ref_count++;\n");
@@ -254,6 +257,7 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
                 string_add_str(code, cmd->str);
                 string_add_chars(code, ");\n");
                 break;
+            }
 
             case CMD_PUSH_STR: {
                 String *str_ident = convert_str_to_identifier(cmd->str);
@@ -267,9 +271,16 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
                 free_string(str_ident);
                 break;
             }
+
+            case CMD_RETURN: {
+                string_add_chars(code, "free_map(local_vars);\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "return;\n");
+            }
         }
     }
 
+    string_add_chars(code, "free_map(local_vars);\n");
     string_add_chars(code, "}\n\n");
 
     free_string(mangled_name);

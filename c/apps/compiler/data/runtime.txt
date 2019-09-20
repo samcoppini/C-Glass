@@ -58,7 +58,7 @@ typedef struct GlassValue {
     union {
         Name name;
 
-        GlassInstance *inst;
+        size_t inst_index;
 
         GlassFunction *func;
 
@@ -95,6 +95,18 @@ typedef struct Map {
     size_t alloc;
 } Map;
 
+#define INIT_MAP_ALLOC 8
+#define MAP_INCREASE_THRESHOLD 0.5
+
+Map *new_map() {
+    Map *map = malloc(sizeof(Map));
+    map->names = calloc(INIT_MAP_ALLOC, sizeof(Name));
+    map->values = malloc(INIT_MAP_ALLOC * sizeof(GlassValue *));
+    map->len = 0;
+    map->alloc = INIT_MAP_ALLOC;
+    return map;
+}
+
 void free_map(Map *map) {
     if (map != NULL) {
         for (size_t i = 0; i < map->alloc; i++) {
@@ -104,6 +116,56 @@ void free_map(Map *map) {
         free(map->values);
         free(map);
     }
+}
+
+void map_set(Map *map, Name name, GlassValue *value);
+
+void increase_map_size(Map *map) {
+    size_t old_alloc = map->alloc;
+    Name *old_names = map->names;
+    GlassValue **old_values = map->values;
+
+    map->alloc = old_alloc * 2;
+    map->names = calloc(map->alloc, sizeof(Name));
+    map->values = malloc(map->alloc * sizeof(GlassValue *));
+    map->len = 0;
+
+    for (size_t i = 0; i < map->alloc; i++) {
+        if (old_names[i] != NO_NAME) {
+            map_set(map, old_names[i], old_values[i]);
+        }
+    }
+
+    free(old_values);
+    free(old_names);
+}
+
+size_t map_get_slot(const Map *map, Name name) {
+    size_t slot = name & (map->alloc - 1);
+    while (map->names[slot] != NO_NAME && map->names[slot] != name) {
+        slot = (slot + 1) & (map->alloc - 1);
+    }
+    return slot;
+}
+
+void map_set(Map *map, Name name, GlassValue *value) {
+    size_t slot = map_get_slot(map, name);
+    if (map->names[slot] == name) {
+        free_value(map->values[slot]);
+        map->values[slot] = value;
+    }
+    else {
+        map->names[slot] = name;
+        map->values[slot] = value;
+        map->len++;
+        if (map->len >= map->alloc * MAP_INCREASE_THRESHOLD) {
+            increase_map_size(map);
+        }
+    }
+}
+
+GlassValue *map_get(Map *map, Name name) {
+    return map->values[map_get_slot(map, name)];
 }
 
 struct Stack {
@@ -193,6 +255,8 @@ size_t new_instance(const GlassClass *gclass) {
     while (cur_inst < num_insts) {
         if (!insts_used[cur_inst]) {
             insts_used[cur_inst] = true;
+            instances[cur_inst].gclass = gclass;
+            instances[cur_inst].vars = new_map();
             return cur_inst++;
         }
         cur_inst++;
