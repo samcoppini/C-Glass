@@ -44,7 +44,7 @@ String *convert_str_to_identifier(const String *str) {
         }
         else {
             char buf[10];
-            sprintf(buf, "_%d", c);
+            sprintf(buf, "_%03d", c);
             string_add_chars(ident, buf);
         }
     }
