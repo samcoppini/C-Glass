@@ -7,6 +7,7 @@
 #include "utils/set.h"
 #include "utils/string.h"
 
+#include <ctype.h>
 #include <stdio.h>
 
 extern const char *RUNTIME_LIBRARY[];
@@ -30,6 +31,48 @@ String *mangle_name(const String *class_name, const String *func_name) {
     string_add_str(new_name, func_name);
 
     return new_name;
+}
+
+String *convert_str_to_identifier(const String *str) {
+    String *ident = new_string();
+
+    for (size_t i = 0; i < string_len(str); i++) {
+        char c = string_get(str, i);
+
+        if (isalnum(c)) {
+            string_add_char(ident, c);
+        }
+        else {
+            char buf[10];
+            sprintf(buf, "_%d", c);
+            string_add_chars(ident, buf);
+        }
+    }
+
+    return ident;
+}
+
+String *make_quoted_string(const String *str) {
+    String *quoted = string_from_char('"');
+
+    for (size_t i = 0; i < string_len(str); i++) {
+        char c = string_get(str, i);
+        if (c == '\\') {
+            string_add_chars(quoted, "\\\\");
+        }
+        else if (isprint(c)) {
+            string_add_char(quoted, c);
+        }
+        else {
+            const char HEX_CHARS[16] = "0123456789ABCDEF";
+            string_add_chars(quoted, "\\x");
+            string_add_char(quoted, HEX_CHARS[(c & 0xF0) >>  4]);
+            string_add_char(quoted, HEX_CHARS[c & 0x0F]);
+        }
+    }
+
+    string_add_char(quoted, '"');
+    return;
 }
 
 Set *get_all_names(const Map *classes) {
@@ -63,6 +106,35 @@ Set *get_all_names(const Map *classes) {
 
     free_list(class_names);
     return all_names;
+}
+
+Set *get_all_strings(const Map *classes) {
+    List *class_names = map_get_keys(classes);
+    Set *all_strings = new_set(STRING_HASH_OPS);
+
+    for (size_t i = 0; i < list_len(class_names); i++) {
+        const String *class_name = list_get(class_names, i);
+        const GlassClass *gclass = map_get(classes, class_name);
+        List *func_names = class_get_func_names(gclass);
+
+        for (size_t j = 0; j < list_len(func_names); j++) {
+            const String *func_name = list_get(func_names, j);
+            const GlassFunction *func = class_get_func(gclass, func_name);
+
+            for (size_t k = 0; k < func_len(func); k++) {
+                const GlassCommand *cmd = func_get_command(func, k);
+
+                if (cmd->type == CMD_PUSH_STR) {
+                    set_add(all_strings, cmd->str);
+                }
+            }
+        }
+
+        free_list(func_names);
+    }
+
+    free_list(class_names);
+    return all_strings;
 }
 
 void generate_name_enum(String *code, const Map *classes) {
@@ -122,6 +194,40 @@ void generate_name_literals(String *code, const Map *classes) {
     free_set(name_set);
 }
 
+void generate_string_literals(String *code, const Map *classes) {
+    Set *string_set = get_all_strings(classes);
+    List *string_list = set_to_list(string_set);
+
+    for (size_t i = 0; i < list_len(string_list); i++) {
+        const String *str = list_get(string_list, i);
+        String *str_ident = convert_str_to_identifier(str);
+
+        string_add_chars(code, "String strLiteral_");
+        string_add_str(code, str_ident);
+        string_add_chars(code, " = {");
+
+        String *quoted = make_quoted_string(str);
+        string_add_str(code, quoted);
+
+        string_add_chars(code, ", 1, 0, ");
+        char buf[80];
+        sprintf(buf, "%d};\n", string_len(str));
+        string_add_chars(code, buf);
+
+        string_add_chars(code, "GlassValue strValue_");
+        string_add_str(code, str_ident);
+        string_add_chars(code, " = { .ref_count = 1, .type = TYPE_STRING, .str = &strLiteral_");
+        string_add_str(code, str_ident);
+        string_add_chars(code, "};\n");
+
+        free_string(str_ident);
+        free_string(quoted);
+    }
+
+    free_list(string_list);
+    free_set(string_set);
+}
+
 void generate_function(String *code, const GlassClass *gclass, const GlassFunction *func) {
     const String *class_name = class_get_name(gclass);
     const String *func_name = func_get_name(func);
@@ -148,6 +254,19 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
                 string_add_str(code, cmd->str);
                 string_add_chars(code, ");\n");
                 break;
+
+            case CMD_PUSH_STR: {
+                String *str_ident = convert_str_to_identifier(cmd->str);
+                string_add_chars(code, "strValue_");
+                string_add_str(code, str_ident);
+                string_add_chars(code, ".ref_count++;\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "stack_push(&strValue_");
+                string_add_str(code, str_ident);
+                string_add_chars(code, ");\n");
+                free_string(str_ident);
+                break;
+            }
         }
     }
 
@@ -240,6 +359,7 @@ String *compile_classes(const Map *classes) {
     generate_name_enum(code, classes);
     add_runtime_library(code);
     generate_name_literals(code, classes);
+    generate_string_literals(code, classes);
     generate_class_definitions(code, classes);
     generate_functions(code, classes);
     add_main_func(code);
