@@ -27,7 +27,7 @@ typedef struct GlassInstance {
 } GlassInstance;
 
 typedef struct GlassFunction {
-    GlassInstance *inst;
+    size_t index;
 
     void (*func)(size_t);
 } GlassFunction;
@@ -60,7 +60,7 @@ typedef struct GlassValue {
 
         size_t inst_index;
 
-        GlassFunction *func;
+        GlassFunction func;
 
         String *str;
 
@@ -110,7 +110,9 @@ Map *new_map() {
 void free_map(Map *map) {
     if (map != NULL) {
         for (size_t i = 0; i < map->alloc; i++) {
-            free_value(map->values[i]);
+            if (map->names[i] != NO_NAME) {
+                free_value(map->values[i]);
+            }
         }
         free(map->names);
         free(map->values);
@@ -263,4 +265,53 @@ size_t new_instance(const GlassClass *gclass) {
     }
     do_garbage_collection();
     return new_instance(gclass);
+}
+
+Map *globals;
+
+void init_globals() {
+    globals = new_map();
+}
+
+void free_globals() {
+    free_map(globals);
+}
+
+void set_var(Name name, GlassValue *value, Map *locals, size_t inst_index) {
+    NameScope scope = get_name_scope(name);
+
+    if (scope == SCOPE_LOCAL) {
+        map_set(locals, name, value);
+    }
+    else if (scope == SCOPE_GLOBAL) {
+        map_set(globals, name, value);
+    }
+    else {
+        GlassInstance *instance = &instances[inst_index];
+        map_set(instance->vars, name, value);
+    }
+}
+
+GlassValue *get_var(Name name, Map *locals, size_t inst_index) {
+    NameScope scope = get_name_scope(name);
+
+    if (scope == SCOPE_LOCAL) {
+        return map_get(locals, name);
+    }
+    else if (scope == SCOPE_GLOBAL) {
+        return map_get(globals, name);
+    }
+    else {
+        GlassInstance *instance = &instances[inst_index];
+        return map_get(instance->vars, name);
+    }
+}
+
+GlassValue *make_func(size_t inst_index, Name func_name) {
+    GlassValue *value = malloc(sizeof(GlassValue));
+    value->ref_count = 1;
+    value->type = TYPE_FUNC;
+    value->func.index = inst_index;
+    value->func.func = instances[inst_index].gclass->funcs[func_name];
+    return value;
 }

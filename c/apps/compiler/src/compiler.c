@@ -141,16 +141,48 @@ void generate_name_enum(String *code, const Map *classes) {
     Set *name_set = get_all_names(classes);
     List *names = set_to_list(name_set);
 
-    string_add_chars(code, "typedef enum Name {\n    NO_NAME,");
+    string_add_chars(code, "typedef enum Name {\n    NO_NAME,\n");
 
     for (size_t i = 0; i < list_len(names); i++) {
-        string_add_chars(code, "\n    NAME_");
+        string_add_chars(code, "    NAME_");
         string_add_str(code, list_get(names, i));
-        string_add_char(code, ',');
+        string_add_chars(code, ",\n");
     }
 
     string_add_chars(code, "    NUM_NAMES\n");
     string_add_chars(code, "\n} Name;\n\n");
+
+    string_add_chars(code, "typedef enum NameScope {\n");
+    string_add_chars(code, "    SCOPE_LOCAL,\n");
+    string_add_chars(code, "    SCOPE_CLASSWIDE,\n");
+    string_add_chars(code, "    SCOPE_GLOBAL\n");
+    string_add_chars(code, "} NameScope;\n\n");
+
+    string_add_chars(code, "NameScope get_name_scope(Name name) {\n");
+    string_add_chars(code, "    switch (name) {\n");
+
+    for (size_t i = 0; i < list_len(names); i++) {
+        const String *name = list_get(names, i);
+        
+        string_add_chars(code, "        case NAME_");
+        string_add_str(code, name);
+        string_add_chars(code, ": return ");
+
+        char c = string_get(name, 0);
+
+        if (isupper(c)) {
+            string_add_chars(code, "SCOPE_GLOBAL;\n");
+        }
+        else if (islower(c)) {
+            string_add_chars(code, "SCOPE_CLASSWIDE;\n");
+        }
+        else {
+            string_add_chars(code, "SCOPE_LOCAL;\n");
+        }
+    }
+
+    string_add_chars(code, "        default: return SCOPE_LOCAL;\n");
+    string_add_chars(code, "    }\n}\n\n");
 
     free_set(name_set);
     free_list(names);
@@ -241,6 +273,10 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
 
     add_indents(code, indent_level);
     string_add_chars(code, "Map *local_vars = new_map();\n");
+    add_indents(code, indent_level);
+    string_add_chars(code, "GlassValue *tmp, *tmp2, *tmp3;\n");
+    add_indents(code, indent_level);
+    string_add_chars(code, "size_t index;\n");
 
     for (size_t i = 0; i < func_len(func); i++) {
         const GlassCommand *cmd = func_get_command(func, i);
@@ -248,6 +284,44 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
         add_indents(code, indent_level);
 
         switch (cmd->type) {
+            case CMD_GET_FUNC: {
+                string_add_chars(code, "tmp2 = stack_pop();\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "tmp = stack_pop();\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "tmp3 = get_var(tmp->name, local_vars, inst_index);\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "free_value(tmp);\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "tmp = make_func(tmp3->inst_index, tmp2->name);\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "stack_push(tmp);\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "free_value(tmp2);\n");
+                break;
+            }
+
+            case CMD_NEW_INST: {
+                string_add_chars(code, "tmp2 = stack_pop();\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "tmp = stack_pop();\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "index = new_instance(CLASSES_ARRAY[tmp2->name]);\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "free_value(tmp2);\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "tmp2 = malloc(sizeof(GlassValue));\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "tmp2->type = TYPE_INST;\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "tmp2->inst_index = index;\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "tmp2->ref_count = 1;\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "set_var(tmp->name, tmp2, local_vars, inst_index);\n");
+                break;
+            }
+
             case CMD_PUSH_NAME: { 
                 string_add_chars(code, "nameValue_");
                 string_add_str(code, cmd->str);
