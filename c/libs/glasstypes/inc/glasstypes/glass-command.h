@@ -96,6 +96,8 @@ typedef struct GlassCommand {
 
 struct String *command_to_str(const GlassCommand *cmd);
 
+struct String *builtin_func_name(BuiltinFunc func);
+
 extern const struct CopyInterface *CMD_COPY_OPS;
 
 #endif

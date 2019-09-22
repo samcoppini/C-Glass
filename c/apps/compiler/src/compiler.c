@@ -18,6 +18,10 @@ extern const char *MAIN_FUNC[];
 
 extern const size_t MAIN_FUNC_LINES;
 
+extern const char *BUILTIN_FUNCS[];
+
+extern const size_t BUILTIN_FUNCS_LINES;
+
 String *mangle_name(const String *class_name, const String *func_name) {
     String *new_name = string_from_char('f');
     char buf[80];
@@ -181,7 +185,7 @@ void generate_name_enum(String *code, const Map *classes) {
         }
     }
 
-    string_add_chars(code, "        default: return SCOPE_LOCAL;\n");
+    string_add_chars(code, "        default: return SCOPE_GLOBAL;\n");
     string_add_chars(code, "    }\n}\n\n");
 
     free_set(name_set);
@@ -191,6 +195,13 @@ void generate_name_enum(String *code, const Map *classes) {
 void add_runtime_library(String *code) {
     for (size_t i = 0; i < RUNTIME_LIBRARY_LINES; i++) {
         string_add_chars(code, RUNTIME_LIBRARY[i]);
+        string_add_char(code, '\n');
+    }
+}
+
+void add_builtin_funcs(String *code) {
+    for (size_t i = 0; i < BUILTIN_FUNCS_LINES; i++) {
+        string_add_chars(code, BUILTIN_FUNCS[i]);
         string_add_char(code, '\n');
     }
 }
@@ -284,6 +295,14 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
         add_indents(code, indent_level);
 
         switch (cmd->type) {
+            case CMD_BUILTIN: {
+                String *builtin_name = builtin_func_name(cmd->builtin);
+                string_add_str(code, builtin_name);
+                string_add_chars(code, "();\n");
+                free_string(builtin_name);
+                break;
+            }
+
             case CMD_EXECUTE_FUNC: {
                 string_add_chars(code, "tmp = stack_pop();\n");
                 add_indents(code, indent_level);
@@ -452,6 +471,7 @@ String *compile_classes(const Map *classes) {
 
     generate_name_enum(code, classes);
     add_runtime_library(code);
+    add_builtin_funcs(code);
     generate_name_literals(code, classes);
     generate_string_literals(code, classes);
     generate_class_definitions(code, classes);

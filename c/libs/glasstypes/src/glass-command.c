@@ -146,6 +146,15 @@ String *command_to_str(const GlassCommand *cmd) {
     }
 }
 
+String *builtin_func_name(BuiltinFunc func) {
+    switch (func) {
+        case BUILTIN_OUTPUT_STR:
+            return string_from_chars("output_string");
+        default:
+            return string_from_chars("unimplemented");
+    }
+}
+
 static void *copy_command_generic(const void *cmd) {
     return copy_command(cmd);
 }
