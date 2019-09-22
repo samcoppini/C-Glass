@@ -148,6 +148,8 @@ String *command_to_str(const GlassCommand *cmd) {
 
 String *builtin_func_name(BuiltinFunc func) {
     switch (func) {
+        case BUILTIN_OUTPUT_NUM:
+            return string_from_chars("output_num");
         case BUILTIN_OUTPUT_STR:
             return string_from_chars("output_string");
         default:

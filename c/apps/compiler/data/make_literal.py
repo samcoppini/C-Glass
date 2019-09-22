@@ -8,6 +8,7 @@ def make_literal(array_name: str, data: str) -> str:
 
     for line in data.splitlines():
         line = line.replace('\\', '\\\\')
+        line = line.replace('"', '\\"')
         lines.append(f'"{line}",')
 
     lines.append('};')
