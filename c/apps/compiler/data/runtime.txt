@@ -315,3 +315,11 @@ GlassValue *make_func(size_t inst_index, Name func_name) {
     value->func.func = instances[inst_index].gclass->funcs[func_name];
     return value;
 }
+
+bool is_truthy(const GlassValue *value) {
+    switch (value->type) {
+        case TYPE_STRING: return value->str->len > 0;
+        case TYPE_NUMBER: return value->num != 0.0;
+        default: return false;
+    }
+}

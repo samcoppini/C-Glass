@@ -295,6 +295,17 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
         add_indents(code, indent_level);
 
         switch (cmd->type) {
+            case CMD_ASSIGN_VAL: {
+                string_add_chars(code, "tmp2 = stack_pop();\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "tmp = stack_pop();\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "set_var(tmp->name, tmp2, local_vars, inst_index);\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "free_value(tmp);\n");
+                break;
+            }
+
             case CMD_BUILTIN: {
                 String *builtin_name = builtin_func_name(cmd->builtin);
                 string_add_str(code, builtin_name);
@@ -326,6 +337,26 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
                 string_add_chars(code, "stack_push(tmp);\n");
                 add_indents(code, indent_level);
                 string_add_chars(code, "free_value(tmp2);\n");
+                break;
+            }
+
+            case CMD_LOOP_BEGIN: {
+                string_add_chars(code, "tmp = get_var(NAME_");
+                string_add_str(code, cmd->str);
+                string_add_chars(code, ", local_vars, inst_index);\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "while (is_truthy(tmp)) {\n");
+                indent_level++;
+                break;
+            }
+
+            case CMD_LOOP_END: {
+                string_add_chars(code, "tmp = get_var(NAME_");
+                string_add_str(code, cmd->str);
+                string_add_chars(code, ", local_vars, inst_index);\n");
+                indent_level--;
+                add_indents(code, indent_level);
+                string_add_chars(code, "}\n");
                 break;
             }
 
@@ -398,6 +429,7 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
         }
     }
 
+    add_indents(code, indent_level);
     string_add_chars(code, "free_map(local_vars);\n");
     string_add_chars(code, "}\n\n");
 
