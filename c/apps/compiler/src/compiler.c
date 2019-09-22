@@ -284,6 +284,15 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
         add_indents(code, indent_level);
 
         switch (cmd->type) {
+            case CMD_EXECUTE_FUNC: {
+                string_add_chars(code, "tmp = stack_pop();\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "tmp->func.func(tmp->func.index);\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "free_value(tmp);\n");
+                break;
+            }
+
             case CMD_GET_FUNC: {
                 string_add_chars(code, "tmp2 = stack_pop();\n");
                 add_indents(code, indent_level);
