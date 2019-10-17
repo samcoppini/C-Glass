@@ -306,11 +306,29 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
                 break;
             }
 
+            case CMD_ASSIGN_SELF: {
+                string_add_chars(code, "tmp = stack_pop();\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "tmp2 = new_inst_value(inst_index);\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "set_var(tmp->name, tmp2, local_vars, inst_index);\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "free_value(tmp);\n");
+                break;
+            }
+
             case CMD_BUILTIN: {
                 String *builtin_name = builtin_func_name(cmd->builtin);
                 string_add_str(code, builtin_name);
                 string_add_chars(code, "();\n");
                 free_string(builtin_name);
+                break;
+            }
+
+            case CMD_DUPLICATE: {
+                char buf[80];
+                sprintf(buf, "duplicate(%u);\n", cmd->index);
+                string_add_chars(code, buf);
                 break;
             }
 
@@ -337,6 +355,17 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
                 string_add_chars(code, "stack_push(tmp);\n");
                 add_indents(code, indent_level);
                 string_add_chars(code, "free_value(tmp2);\n");
+                break;
+            }
+
+            case CMD_GET_VAL: {
+                string_add_chars(code, "tmp = stack_pop();\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "tmp2 = get_var(tmp->name, local_vars, inst_index);\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "stack_push(tmp2);\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "free_value(tmp);\n");
                 break;
             }
 
@@ -378,6 +407,11 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
                 string_add_chars(code, "tmp2->ref_count = 1;\n");
                 add_indents(code, indent_level);
                 string_add_chars(code, "set_var(tmp->name, tmp2, local_vars, inst_index);\n");
+                break;
+            }
+
+            case CMD_POP_STACK: {
+                string_add_chars(code, "free_value(stack_pop());\n");
                 break;
             }
 

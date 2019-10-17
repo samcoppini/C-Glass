@@ -1,0 +1,23 @@
+void output_string() {
+    GlassValue *val = stack_pop();
+    fwrite(val->str->buf, sizeof(char), val->str->len, stdout);
+    free_value(val);
+}
+
+void output_num() {
+    GlassValue *val = stack_pop();
+    printf("%g", val->num);
+    free_value(val);
+}
+
+void add_numbers() {
+    GlassValue *val1 = stack_pop();
+    GlassValue *val2 = stack_pop();
+    val1->num += val2->num;
+    stack_push(val1);
+    free_value(val2);
+}
+
+void unimplemented() {
+    // Not implemented yet
+}

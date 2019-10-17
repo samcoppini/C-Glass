@@ -85,6 +85,14 @@ void free_value(GlassValue *val) {
     }
 }
 
+GlassValue *new_inst_value(size_t inst_index) {
+    GlassValue *val = malloc(sizeof(GlassValue));
+    val->ref_count = 1;
+    val->type = TYPE_INST;
+    val->inst_index = inst_index;
+    return val;
+}
+
 typedef struct Map {
     Name *names;
 
@@ -202,6 +210,12 @@ GlassValue *stack_pop() {
     assert(stack.len > 0);
     stack.len--;
     return stack.values[stack.len];
+}
+
+void duplicate(size_t index) {
+    GlassValue *val = stack.values[stack.len - index - 1];
+    val->ref_count++;
+    stack_push(val);
 }
 
 GlassInstance *instances;
