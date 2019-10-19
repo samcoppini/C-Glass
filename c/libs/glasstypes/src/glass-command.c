@@ -148,6 +148,22 @@ String *command_to_str(const GlassCommand *cmd) {
 
 String *builtin_func_name(BuiltinFunc func) {
     switch (func) {
+        case BUILTIN_MATH_ADD:
+            return string_from_chars("add_numbers");
+        case BUILTIN_MATH_SUBTRACT:
+            return string_from_chars("subtract_numbers");
+        case BUILTIN_MATH_EQUAL:
+            return string_from_chars("numbers_equal");
+        case BUILTIN_MATH_NOT_EQUAL:
+            return string_from_chars("numbers_not_equal");
+        case BUILTIN_MATH_GREATER_THAN:
+            return string_from_chars("numbers_greater_than");
+        case BUILTIN_MATH_GREATER_OR_EQUAL:
+            return string_from_chars("numbers_greater_or_equal");
+        case BUILTIN_MATH_LESS_THAN:
+            return string_from_chars("numbers_less_than");
+        case BUILTIN_MATH_LESS_OR_EQUAL:
+            return string_from_chars("numbers_less_or_equal");
         case BUILTIN_OUTPUT_NUM:
             return string_from_chars("output_num");
         case BUILTIN_OUTPUT_STR:

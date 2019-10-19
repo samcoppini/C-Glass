@@ -130,6 +130,14 @@ void free_map(Map *map) {
 
 void map_set(Map *map, Name name, GlassValue *value);
 
+size_t map_get_slot(const Map *map, Name name) {
+    size_t slot = name & (map->alloc - 1);
+    while (map->names[slot] != NO_NAME && map->names[slot] != name) {
+        slot = (slot + 1) & (map->alloc - 1);
+    }
+    return slot;
+}
+
 void increase_map_size(Map *map) {
     size_t old_alloc = map->alloc;
     Name *old_names = map->names;
@@ -138,24 +146,17 @@ void increase_map_size(Map *map) {
     map->alloc = old_alloc * 2;
     map->names = calloc(map->alloc, sizeof(Name));
     map->values = malloc(map->alloc * sizeof(GlassValue *));
-    map->len = 0;
 
     for (size_t i = 0; i < map->alloc; i++) {
         if (old_names[i] != NO_NAME) {
-            map_set(map, old_names[i], old_values[i]);
+            size_t slot = map_get_slot(map, old_names[i]);
+            map->names[slot] = old_names[i];
+            map->values[slot] = old_values[i];
         }
     }
 
     free(old_values);
     free(old_names);
-}
-
-size_t map_get_slot(const Map *map, Name name) {
-    size_t slot = name & (map->alloc - 1);
-    while (map->names[slot] != NO_NAME && map->names[slot] != name) {
-        slot = (slot + 1) & (map->alloc - 1);
-    }
-    return slot;
 }
 
 void map_set(Map *map, Name name, GlassValue *value) {
