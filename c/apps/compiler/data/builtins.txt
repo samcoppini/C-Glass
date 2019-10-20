@@ -13,64 +13,64 @@ void output_num() {
 void add_numbers() {
     GlassValue *val1 = stack_pop();
     GlassValue *val2 = stack_pop();
-    val1->num += val2->num;
-    stack_push(val1);
+    stack_push(new_number_value(val1->num + val2->num));
+    free_value(val1);
     free_value(val2);
 }
 
 void subtract_numbers() {
     GlassValue *val1 = stack_pop();
     GlassValue *val2 = stack_pop();
-    val1->num = val2->num - val1->num;
-    stack_push(val1);
+    stack_push(new_number_value(val2->num - val1->num));
+    free_value(val1);
     free_value(val2);
 }
 
 void numbers_equal() {
     GlassValue *val1 = stack_pop();
     GlassValue *val2 = stack_pop();
-    val1->num = (val1->num == val2->num ? 1.0 : 0.0);
-    stack_push(val1);
+    stack_push(new_number_value(val1->num == val2->num ? 1.0 : 0.0));
+    free_value(val1);
     free_value(val2);
 }
 
 void numbers_not_equal() {
     GlassValue *val1 = stack_pop();
     GlassValue *val2 = stack_pop();
-    val1->num = (val1->num != val2->num ? 1.0 : 0.0);
-    stack_push(val1);
+    stack_push(new_number_value(val1->num != val2->num ? 1.0 : 0.0));
+    free_value(val1);
     free_value(val2);
 }
 
 void numbers_greater_than() {
     GlassValue *val1 = stack_pop();
     GlassValue *val2 = stack_pop();
-    val1->num = (val1->num < val2->num ? 1.0 : 0.0);
-    stack_push(val1);
+    stack_push(new_number_value(val1->num < val2->num ? 1.0 : 0.0));
+    free_value(val1);
     free_value(val2);
 }
 
 void numbers_greater_or_equal() {
     GlassValue *val1 = stack_pop();
     GlassValue *val2 = stack_pop();
-    val1->num = (val1->num <= val2->num ? 1.0 : 0.0);
-    stack_push(val1);
+    stack_push(new_number_value(val1->num <= val2->num ? 1.0 : 0.0));
+    free_value(val1);
     free_value(val2);
 }
 
 void numbers_less_than() {
     GlassValue *val1 = stack_pop();
     GlassValue *val2 = stack_pop();
-    val1->num = (val1->num > val2->num ? 1.0 : 0.0);
-    stack_push(val1);
+    stack_push(new_number_value(val1->num > val2->num ? 1.0 : 0.0));
+    free_value(val1);
     free_value(val2);
 }
 
 void numbers_less_or_equal() {
     GlassValue *val1 = stack_pop();
     GlassValue *val2 = stack_pop();
-    val1->num = (val1->num >= val2->num ? 1.0 : 0.0);
-    stack_push(val1);
+    stack_push(new_number_value(val1->num >= val2->num ? 1.0 : 0.0));
+    free_value(val1);
     free_value(val2);
 }
 

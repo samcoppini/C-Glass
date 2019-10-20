@@ -429,18 +429,9 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
             }
 
             case CMD_PUSH_NUM: {
-                string_add_chars(code, "tmp = malloc(sizeof(GlassValue));\n");
-                add_indents(code, indent_level);
-                string_add_chars(code, "tmp->ref_count = 1;\n");
-                add_indents(code, indent_level);
-                string_add_chars(code, "tmp->type = TYPE_NUMBER;\n");
-                add_indents(code, indent_level);
-                string_add_chars(code, "tmp->num = ");
-                char buf[80];
-                sprintf(buf, "%f;\n", cmd->number);
+                char buf[160];
+                sprintf(buf, "stack_push(new_number_value(%f));\n", cmd->number);
                 string_add_chars(code, buf);
-                add_indents(code, indent_level);
-                string_add_chars(code, "stack_push(tmp);\n");
                 break;
             }
 

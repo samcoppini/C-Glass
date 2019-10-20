@@ -93,6 +93,14 @@ GlassValue *new_inst_value(size_t inst_index) {
     return val;
 }
 
+GlassValue *new_number_value(double num) {
+    GlassValue *val = malloc(sizeof(GlassValue));
+    val->ref_count = 1;
+    val->type = TYPE_NUMBER;
+    val->num = num;
+    return val;
+}
+
 typedef struct Map {
     Name *names;
 
