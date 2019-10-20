@@ -26,6 +26,36 @@ void subtract_numbers() {
     free_value(val2);
 }
 
+void multiply_numbers() {
+    GlassValue *val1 = stack_pop();
+    GlassValue *val2 = stack_pop();
+    stack_push(new_number_value(val1->num * val2->num));
+    free_value(val1);
+    free_value(val2);
+}
+
+void divide_numbers() {
+    GlassValue *val1 = stack_pop();
+    GlassValue *val2 = stack_pop();
+    stack_push(new_number_value(val2->num / val1->num));
+    free_value(val1);
+    free_value(val2);
+}
+
+void modulo_numbers() {
+    GlassValue *val1 = stack_pop();
+    GlassValue *val2 = stack_pop();
+    stack_push(new_number_value(fmod(val2->num, val1->num)));
+    free_value(val1);
+    free_value(val2);
+}
+
+void floor_number() {
+    GlassValue *val = stack_pop();
+    stack_push(new_number_value(floor(val->num)));
+    free_value(val);
+}
+
 void numbers_equal() {
     GlassValue *val1 = stack_pop();
     GlassValue *val2 = stack_pop();

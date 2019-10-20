@@ -152,6 +152,14 @@ String *builtin_func_name(BuiltinFunc func) {
             return string_from_chars("add_numbers");
         case BUILTIN_MATH_SUBTRACT:
             return string_from_chars("subtract_numbers");
+        case BUILTIN_MATH_MULTIPLY:
+            return string_from_chars("multiply_numbers");
+        case BUILTIN_MATH_DIVIDE:
+            return string_from_chars("divide_numbers");
+        case BUILTIN_MATH_MODULO:
+            return string_from_chars("modulo_numbers");
+        case BUILTIN_MATH_FLOOR:
+            return string_from_chars("floor_number");
         case BUILTIN_MATH_EQUAL:
             return string_from_chars("numbers_equal");
         case BUILTIN_MATH_NOT_EQUAL:
