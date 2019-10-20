@@ -365,6 +365,8 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
                 add_indents(code, indent_level);
                 string_add_chars(code, "stack_push(tmp2);\n");
                 add_indents(code, indent_level);
+                string_add_chars(code, "tmp2->ref_count++;\n");
+                add_indents(code, indent_level);
                 string_add_chars(code, "free_value(tmp);\n");
                 break;
             }
