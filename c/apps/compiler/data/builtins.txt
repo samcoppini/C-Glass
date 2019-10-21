@@ -104,6 +104,107 @@ void numbers_less_or_equal() {
     free_value(val2);
 }
 
+void strings_equal() {
+    GlassValue *val1 = stack_pop();
+    GlassValue *val2 = stack_pop();
+    
+    String *str1 = val1->str;
+    String *str2 = val2->str;
+    
+    if (str1->len != str2->len) {
+        stack_push(new_number_value(0));
+    }
+    else {
+        stack_push(new_number_value(memcmp(str1->buf, str2->buf, str1->len) == 0 ? 1 : 0));
+    }
+    
+    free_value(val1);
+    free_value(val2);
+}
+
+void string_index() {
+    GlassValue *val1 = stack_pop();
+    GlassValue *val2 = stack_pop();
+    GlassValue *val3 = new_string_value(new_string(1));
+    
+    val3->str->buf[0] = val2->str->buf[(size_t) val1->num];
+    
+    stack_push(val3);
+    
+    free_value(val1);
+    free_value(val2);
+}
+
+void string_replace() {
+    GlassValue *char_val = stack_pop();
+    GlassValue *index = stack_pop();
+    GlassValue *old_string = stack_pop();
+
+    GlassValue *new_str = new_string_value(copy_string(old_string->str));
+    new_str->str->buf[(size_t) index->num] = char_val->str->buf[0];
+    stack_push(new_str);
+
+    free_value(char_val);
+    free_value(index);
+    free_value(old_string);
+}
+
+void string_length() {
+    GlassValue *val = stack_pop();
+    stack_push(new_number_value(val->str->len));
+    free_value(val);
+}
+
+void string_append() {
+    GlassValue *val1 = stack_pop();
+    GlassValue *val2 = stack_pop();
+    
+    String *str1 = val1->str;
+    String *str2 = val2->str;
+    
+    String *new_str = new_string(str1->len + str2->len);
+    memcpy(new_str->buf, str2->buf, str2->len);
+    memcpy(new_str->buf + str2->len, str1->buf, str1->len);
+    stack_push(new_string_value(new_str));
+
+    free_value(val1);
+    free_value(val2);
+}
+
+void string_split() {
+    GlassValue *idx_val = stack_pop();
+    GlassValue *str_val = stack_pop();
+
+    size_t str1_len = MIN(idx_val->num, str_val->str->len);
+    size_t str2_len = str_val->str->len - str1_len;
+
+    String *str1 = new_string(str1_len);
+    String *str2 = new_string(str2_len);
+    memcpy(str1->buf, str_val->str->buf, str1_len);
+    memcpy(str2->buf, str_val->str->buf + str1_len, str2_len);
+
+    stack_push(new_string_value(str1));
+    stack_push(new_string_value(str2));
+
+    free_value(idx_val);
+    free_value(str_val);
+}
+
+void string_to_num() {
+    GlassValue *val = stack_pop();
+    stack_push(new_number_value(val->str->buf[0]));
+    free_value(val);
+}
+
+void num_to_string() {
+    GlassValue *val = stack_pop();
+    GlassValue *str_val = new_string_value(new_string(1));
+    str_val->str->buf[0] = (char) val->num;
+    str_val->str->len = 1;
+    stack_push(str_val);
+    free_value(val);
+}
+
 void unimplemented() {
     // Not implemented yet
 }

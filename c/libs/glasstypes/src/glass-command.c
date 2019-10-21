@@ -172,6 +172,22 @@ String *builtin_func_name(BuiltinFunc func) {
             return string_from_chars("numbers_less_than");
         case BUILTIN_MATH_LESS_OR_EQUAL:
             return string_from_chars("numbers_less_or_equal");
+        case BUILTIN_STR_APPEND:
+            return string_from_chars("string_append");
+        case BUILTIN_STR_EQUAL:
+            return string_from_chars("strings_equal");
+        case BUILTIN_STR_INDEX:
+            return string_from_chars("string_index");
+        case BUILTIN_STR_REPLACE:
+            return string_from_chars("string_replace");
+        case BUILTIN_STR_SPLIT:
+            return string_from_chars("string_split");
+        case BUILTIN_STR_LENGTH:
+            return string_from_chars("string_length");
+        case BUILTIN_STR_STR_TO_NUM:
+            return string_from_chars("string_to_num");
+        case BUILTIN_STR_NUM_TO_STR:
+            return string_from_chars("num_to_string");
         case BUILTIN_OUTPUT_NUM:
             return string_from_chars("output_num");
         case BUILTIN_OUTPUT_STR:

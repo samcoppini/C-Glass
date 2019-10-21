@@ -14,6 +14,8 @@ typedef enum Type {
     TYPE_STRING,
 } Type;
 
+#define MIN(A, B) ((A) < (B) ? (A) : (B))
+
 struct GlassInstance;
 struct Map;
 
@@ -38,13 +40,27 @@ typedef struct String {
 
     unsigned ref_count;
 
-    size_t alloc;
-
     size_t len;
 } String;
 
+String *new_string(size_t len) {
+    String *str = malloc(sizeof(String));
+    str->buf = malloc(sizeof(char) * len);
+    str->ref_count = 0;
+    str->len = len;
+    return str;
+}
+
+String *copy_string(const String *str) {
+    String *new_str = malloc(sizeof(String));
+    new_str->buf = malloc(sizeof(char) * str->len);
+    memcpy(new_str->buf, str->buf, str->len);
+    new_str->len = str->len;
+    new_str->ref_count = 0;
+    return new_str;
+}
+
 void free_string(String *str) {
-    str->ref_count--;
     if (str->ref_count == 0) {
         free(str->buf);
         free(str);
@@ -99,6 +115,14 @@ GlassValue *new_number_value(double num) {
     val->ref_count = 1;
     val->type = TYPE_NUMBER;
     val->num = num;
+    return val;
+}
+
+GlassValue *new_string_value(String *str) {
+    GlassValue *val = malloc(sizeof(GlassValue));
+    val->ref_count = 1;
+    val->type = TYPE_STRING;
+    val->str = str;
     return val;
 }
 

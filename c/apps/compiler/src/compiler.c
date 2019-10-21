@@ -252,7 +252,7 @@ void generate_string_literals(String *code, const Map *classes) {
         String *quoted = make_quoted_string(str);
         string_add_str(code, quoted);
 
-        string_add_chars(code, ", 1, 0, ");
+        string_add_chars(code, ", 1, ");
         char buf[80];
         sprintf(buf, "%d};\n", string_len(str));
         string_add_chars(code, buf);
