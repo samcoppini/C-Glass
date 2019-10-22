@@ -24,4 +24,20 @@ foreach test : tests
         suite: ['glass-test'],
     )
 
+    compiled_source = custom_target(
+        'compiled-' + test_name,
+        input: [test_src] + glass_lib_paths,
+        output: [test_name + '.c'],
+        command: [compiler_exe, '@INPUT@', '--out', '@OUTPUT0@'],
+    )
+
+    test(
+        'compiled-' + test_name,
+        executable(
+            'compiled-' + test_name,
+            compiled_source,
+        ),
+        suite: ['glass-test', 'compiled-glass-test'],
+    )
+
 endforeach
