@@ -410,11 +410,11 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
                 add_indents(code, indent_level);
                 string_add_chars(code, "tmp2->ref_count = 1;\n");
                 add_indents(code, indent_level);
-                string_add_chars(code, "ctor = instances[tmp2->inst_index].gclass->funcs[NAME_c__];");
+                string_add_chars(code, "ctor = instances[index].gclass->funcs[NAME_c__];");
                 add_indents(code, indent_level);
                 string_add_chars(code, "if (ctor != NULL) {");
                 add_indents(code, indent_level + 1);
-                string_add_chars(code, "ctor(tmp2->inst_index);");
+                string_add_chars(code, "ctor(index);");
                 add_indents(code, indent_level);
                 string_add_chars(code, "}");
                 add_indents(code, indent_level);
