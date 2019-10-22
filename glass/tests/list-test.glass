@@ -1,0 +1,51 @@
+{M
+    [(printList)
+        "List length: "oo.?
+        (_len)l(getLength).?=
+        (_len)*o(onl).?
+
+        "List contents:"oo.?
+
+        (_a)A!
+        (_i)<0>=
+        (_cmp)(_i)*(_len)*(_a)(lt).?=
+        /(_cmp)
+            (_i)*l(get).?
+            " "oo.?o(on).?
+
+            (_i)(_i)*<1>(_a)a.?=
+            (_cmp)(_i)*(_len)*(_a)(lt).?=
+        \
+
+        "\n"oo.?
+    ]
+
+    [m
+        t$
+        o(Output)!
+        l(List)!
+
+        "Length of empty list: "oo.?
+        l(getLength).?o(onl).?
+
+        "Adding 42 to the list"o(ol).?
+        <42>l(add).?
+        t(printList).?
+
+        "Adding 54 to the list"o(ol).?
+        <54>l(add).?
+        t(printList).?
+
+        "Adding -7 to the list"o(ol).?
+        <-7>l(add).?
+        t(printList).?
+
+        "Adding 99 to the list"o(ol).?
+        <99>l(add).?
+        t(printList).?
+
+        "Adding 0 to the list"o(ol).?
+        <0>l(add).?
+        t(printList).?
+    ]
+}

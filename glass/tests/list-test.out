@@ -1,0 +1,16 @@
+Length of empty list: 0
+Adding 42 to the list
+List length: 1
+List contents: 42
+Adding 54 to the list
+List length: 2
+List contents: 42 54
+Adding -7 to the list
+List length: 3
+List contents: 42 54 -7
+Adding 99 to the list
+List length: 4
+List contents: 42 54 -7 99
+Adding 0 to the list
+List length: 5
+List contents: 42 54 -7 99 0
