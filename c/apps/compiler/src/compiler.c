@@ -287,6 +287,8 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
     add_indents(code, indent_level);
     string_add_chars(code, "GlassValue *tmp, *tmp2, *tmp3;\n");
     add_indents(code, indent_level);
+    string_add_chars(code, "void (*ctor)(size_t);\n");
+    add_indents(code, indent_level);
     string_add_chars(code, "size_t index;\n");
 
     for (size_t i = 0; i < func_len(func); i++) {
@@ -407,6 +409,14 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
                 string_add_chars(code, "tmp2->inst_index = index;\n");
                 add_indents(code, indent_level);
                 string_add_chars(code, "tmp2->ref_count = 1;\n");
+                add_indents(code, indent_level);
+                string_add_chars(code, "ctor = instances[tmp2->inst_index].gclass->funcs[NAME_c__];");
+                add_indents(code, indent_level);
+                string_add_chars(code, "if (ctor != NULL) {");
+                add_indents(code, indent_level + 1);
+                string_add_chars(code, "ctor(tmp2->inst_index);");
+                add_indents(code, indent_level);
+                string_add_chars(code, "}");
                 add_indents(code, indent_level);
                 string_add_chars(code, "set_var(tmp->name, tmp2, local_vars, inst_index);\n");
                 break;
