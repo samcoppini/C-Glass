@@ -83,6 +83,11 @@ Set *get_all_names(const Map *classes) {
     List *class_names = map_get_keys(classes);
     Set *all_names = new_set(STRING_HASH_OPS);
 
+    // Add c__ name to ensure constructor is always one of the names
+    String *c__name = string_from_chars("c__");
+    set_add(all_names, c__name);
+    free_string(c__name);
+
     for (size_t i = 0; i < list_len(class_names); i++) {
         const String *class_name = list_get(class_names, i);
         set_add(all_names, class_name);
