@@ -205,6 +205,25 @@ void num_to_string() {
     free_value(val);
 }
 
+// These get set in main
+char **arg_list;
+int arg_count;
+
+int cur_argument = 0;
+
+void argument_count() {
+    stack_push(new_number_value(arg_count));
+}
+
+void next_argument() {
+    String *str = malloc(sizeof(String));
+    str->ref_count = 0;
+    str->len = strlen(arg_list[cur_argument]);
+    str->buf = malloc(str->len);
+    memcpy(str->buf, arg_list[cur_argument], str->len);
+    cur_argument++;
+}
+
 void unimplemented() {
     // Not implemented yet
 }

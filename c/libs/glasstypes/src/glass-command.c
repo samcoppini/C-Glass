@@ -192,6 +192,10 @@ String *builtin_func_name(BuiltinFunc func) {
             return string_from_chars("output_num");
         case BUILTIN_OUTPUT_STR:
             return string_from_chars("output_string");
+        case BUILTIN_INPUT_ARG_COUNT:
+            return string_from_chars("argument_count");
+        case BUILTIN_INPUT_ARGUMENT:
+            return string_from_chars("next_argument");
         default:
             return string_from_chars("unimplemented");
     }
