@@ -21,7 +21,7 @@ foreach test : tests
             test_src,
         ] + glass_lib_paths,
         workdir: meson.current_source_dir(),
-        suite: ['glass-test'],
+        suite: ['glass-test', 'interpreter-test'],
     )
 
     compiled_source = custom_target(
@@ -31,13 +31,21 @@ foreach test : tests
         command: [compiler_exe, '@INPUT@', '--out', '@OUTPUT0@'],
     )
 
+    compiled_exe = executable(
+        'compiled-' + test_name,
+        compiled_source,
+    )
+
     test(
         'compiled-' + test_name,
-        executable(
-            'compiled-' + test_name,
-            compiled_source,
-        ),
-        suite: ['glass-test', 'compiled-glass-test'],
+        python,
+        args: [
+            './test-interpreter.py',
+            '--exe', compiled_exe.full_path(),
+            '--expected', test_out,
+        ],
+        workdir: meson.current_source_dir(),
+        suite: ['glass-test', 'compiler-test'],
     )
 
 endforeach
