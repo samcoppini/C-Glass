@@ -747,6 +747,7 @@ int execute_function(GlassValue *func_val, InterpreterState *state) {
     GlassInstance inst = func_val->inst;
 
     Map *local_vars = new_map(STRING_HASH_OPS, VALUE_COPY_OPS);
+    register_new_scope(local_vars, inst);
 
     for (size_t cmd_idx = 0; cmd_idx < func_len(func); cmd_idx++) {
         const GlassCommand *cmd = func_get_command(func, cmd_idx);
@@ -941,7 +942,6 @@ int execute_function(GlassValue *func_val, InterpreterState *state) {
                 }
                 GlassValue *inst_val = new_inst_value(new_inst);
                 set_var(oname_val->str, inst_val, globals, inst, local_vars);
-                release_glass_instance(new_inst);
                 free_glass_value(inst_val);
                 free_string(ctor_name);
                 break;
@@ -981,6 +981,7 @@ int execute_function(GlassValue *func_val, InterpreterState *state) {
 
             case CMD_RETURN: {
                 free_map(local_vars);
+                exit_scope();
                 return 0;
             }
 
@@ -991,6 +992,7 @@ int execute_function(GlassValue *func_val, InterpreterState *state) {
     }
 
     free_map(local_vars);
+    exit_scope();
     return 0;
 }
 
@@ -1016,7 +1018,7 @@ int run_interpreter(const Map *classes, const List *args) {
     Map *globals = new_map(STRING_HASH_OPS, VALUE_COPY_OPS);
     int ret_val = 0;
 
-    init_instances();
+    init_instances(globals);
 
     InterpreterState state = {
         .classes = classes,

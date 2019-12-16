@@ -8,11 +8,16 @@ typedef size_t GlassInstance;
 struct GlassClass;
 struct GlassFunction;
 struct GlassValue;
+struct Map;
 struct String;
 
-void init_instances(void);
+void init_instances(const struct Map *globals);
 
 void free_instances(void);
+
+void register_new_scope(const struct Map *local_vars, GlassInstance inst);
+
+void exit_scope(void);
 
 GlassInstance new_glass_instance(const struct GlassClass *gclass);
 

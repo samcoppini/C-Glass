@@ -14,17 +14,18 @@ typedef struct CopyInterface {
 
 // Macro for defining a CopyInterface for a simple data type
 #define COPY_OPS_DEFINITION(TYPE, NAME)                          \
-    static void *copy_ ## TYPE (const void *val) {               \
+    static void *copy_ ## NAME (const void *val) {               \
         TYPE *copy = malloc(sizeof(TYPE));                       \
         *copy = * (TYPE *) val;                                  \
         return copy;                                             \
     }                                                            \
                                                                  \
     const CopyInterface *NAME ## _COPY_OPS = &(CopyInterface) {  \
-        copy_ ## TYPE, free,                                     \
+        copy_ ## NAME, free,                                     \
     }                                                            \
 
 COPY_OPS_DECL(INT);
 COPY_OPS_DECL(SIZE_T);
+COPY_OPS_DECL(VOID_PTR);
 
 #endif
