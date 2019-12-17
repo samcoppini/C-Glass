@@ -259,7 +259,7 @@ void generate_string_literals(String *code, const Map *classes) {
 
         string_add_chars(code, ", 1, ");
         char buf[80];
-        sprintf(buf, "%d};\n", string_len(str));
+        sprintf(buf, "%zu};\n", string_len(str));
         string_add_chars(code, buf);
 
         string_add_chars(code, "GlassValue strValue_");
@@ -350,7 +350,7 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
 
             case CMD_DUPLICATE: {
                 char buf[80];
-                sprintf(buf, "duplicate(%u);\n", cmd->index);
+                sprintf(buf, "duplicate(%zu);\n", cmd->index);
                 string_add_chars(code, buf);
                 break;
             }

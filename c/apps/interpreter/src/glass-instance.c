@@ -155,6 +155,7 @@ GlassInstance copy_glass_instance(GlassInstance inst) {
 }
 
 void release_glass_instance(GlassInstance inst) {
+    (void) inst;
     /*
     inst_array[inst].ref_count--;
     if (inst_array[inst].ref_count == 0) {

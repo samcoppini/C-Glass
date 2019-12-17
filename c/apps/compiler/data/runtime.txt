@@ -93,10 +93,8 @@ GlassValue *copy_value(GlassValue *val) {
 void free_value(GlassValue *val) {
     val->ref_count--;
     if (val->ref_count == 0) {
-        switch (val->type) {
-            case TYPE_STRING:
-                free_string(val->str);
-                break;
+        if (val->type == TYPE_STRING) {
+            free_string(val->str);
         }
         free(val);
     }
