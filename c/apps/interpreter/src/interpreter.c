@@ -1035,6 +1035,7 @@ int run_interpreter(const Map *classes, const List *args) {
         ret_val = execute_function(ctor_val, &state);
         free_glass_value(ctor_val);
     }
+    free_string(ctor_name);
 
     if (ret_val == 0) {
         GlassValue val = {
