@@ -141,6 +141,9 @@ Map *build_classes(Map *builders_map, bool handle_inheritance) {
         free_glass_class(gclass);
     }
 
+    free_list(class_names);
+    free_list(parent_chain);
+
     return classes;
 }
 
