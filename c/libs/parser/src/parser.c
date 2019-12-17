@@ -355,6 +355,7 @@ static GlassClassBuilder *parse_class(Stream *stream) {
                 return NULL;
             }
             builder_add_func(builder, func);
+            free_glass_func(func);
         }
         else if (c == '(') {
             stream_unget(stream);
