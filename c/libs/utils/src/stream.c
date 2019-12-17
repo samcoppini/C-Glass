@@ -46,6 +46,9 @@ Stream *stream_from_file(FILE *file) {
 }
 
 void free_stream(Stream *stream) {
+    if (stream->name != NULL) {
+        free_string(stream->name);
+    }
     free(stream->chars);
     free(stream);
 }
