@@ -86,6 +86,7 @@ void free_glass_class(GlassClass *gclass) {
 
 void free_class_builder(GlassClassBuilder *builder) {
     free_string(builder->name);
+    free_string(builder->filename);
     free_list(builder->parents);
     free_list(builder->funcs);
     free(builder);
