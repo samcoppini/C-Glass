@@ -11,8 +11,9 @@
 #include <assert.h>
 #include <math.h>
 #include <ctype.h>
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 void parser_error(const Stream *stream, const char *msg, ...) {
     String *name = copy_string(stream_get_name(stream));
