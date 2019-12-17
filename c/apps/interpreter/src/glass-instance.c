@@ -57,8 +57,8 @@ void register_new_scope(const Map *local_vars, GlassInstance inst) {
 }
 
 void exit_scope(void) {
-    list_pop(local_vars_list);
-    list_pop(this_insts_list);
+    free(list_pop(local_vars_list));
+    free(list_pop(this_insts_list));
 }
 
 static void mark_var_map_as_reachable(const Map *vars) {
