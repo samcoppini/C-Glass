@@ -34,6 +34,7 @@ foreach test : tests
     compiled_exe = executable(
         'compiled-' + test_name,
         compiled_source,
+        dependencies: [math_dep],
     )
 
     test(

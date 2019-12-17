@@ -7,6 +7,7 @@ project('c-glass', 'c',
 )
 
 cc = meson.get_compiler('c')
+math_dep = cc.find_library('m', required: false)
 
 if cc.has_argument('-Wshadow')
     add_project_arguments('-Wshadow', language : 'c')

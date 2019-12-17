@@ -10,7 +10,7 @@ interpreter_src = files(
 interpreter_exe = executable(
     'cglass',
     interpreter_src,
-    dependencies: [glasstypes_dep, parser_dep, utils_dep],
+    dependencies: [glasstypes_dep, math_dep, parser_dep, utils_dep],
     include_directories: [interpreter_inc],
     install: true,
 )
