@@ -1022,8 +1022,8 @@ int run_interpreter(const Map *classes, const List *args) {
 
     InterpreterState state = {
         .classes = classes,
-        .stack = new_list(VALUE_COPY_OPS),
-        .global_vars = new_map(STRING_HASH_OPS, VALUE_COPY_OPS),
+        .stack = stack,
+        .global_vars = globals,
         .args = args,
         .cur_arg = 0,
     };
