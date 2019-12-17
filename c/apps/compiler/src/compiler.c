@@ -295,6 +295,22 @@ void generate_function(String *code, const GlassClass *gclass, const GlassFuncti
     string_add_chars(code, "void (*ctor)(size_t);\n");
     add_indents(code, indent_level);
     string_add_chars(code, "size_t index;\n");
+    add_indents(code, indent_level);
+
+    // Disable warnings for unused variables
+    string_add_chars(code, "(void) local_vars;");
+    add_indents(code, indent_level);
+    string_add_chars(code, "(void) tmp;");
+    add_indents(code, indent_level);
+    string_add_chars(code, "(void) tmp2;");
+    add_indents(code, indent_level);
+    string_add_chars(code, "(void) tmp3;");
+    add_indents(code, indent_level);
+    string_add_chars(code, "(void) ctor;");
+    add_indents(code, indent_level);
+    string_add_chars(code, "(void) index;");
+    add_indents(code, indent_level);
+    string_add_chars(code, "(void) inst_index;");
 
     for (size_t i = 0; i < func_len(func); i++) {
         const GlassCommand *cmd = func_get_command(func, i);
