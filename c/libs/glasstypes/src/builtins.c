@@ -81,6 +81,7 @@ void add_builtin_classes(GlassProgramBuilder *prog_builder) {
 
         String *class_name = string_from_chars(builtin_class.class_name);
         GlassClassBuilder *class_builder = new_class_builder(class_name, builtin_name, 0, 0);
+        free_string(class_name);
 
         for (size_t j = 0; j < MAX_BUILTIN_FUNCS; j++) {
             BuiltinFuncInfo func_info = builtin_class.funcs[j];
