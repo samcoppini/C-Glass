@@ -802,6 +802,24 @@ int execute_function(GlassValue *func_val, InterpreterState *state) {
                 break;
             }
 
+            case CMD_EXECUTE_FUNC: {
+                if (check_stack(stack, "?", 1, ARG_FUNC)) {
+                    output_stack_trace_line(func_val, cmd);
+                    free_map(local_vars);
+                    return 1;
+                }
+                GlassValue *new_func = list_pop(stack);
+                int ret = execute_function(new_func, state);
+                free_glass_value(new_func);
+                if (ret != 0) {
+                    output_stack_trace_line(func_val, cmd);
+                    free_map(local_vars);
+                    exit_scope();
+                    return ret;
+                }
+                break;
+            }
+
             case CMD_GET_FUNC: {
                 if (check_stack(stack, ".", 2, ARG_NAME, ARG_NAME)) {
                     output_stack_trace_line(func_val, cmd);
@@ -864,24 +882,6 @@ int execute_function(GlassValue *func_val, InterpreterState *state) {
                 }
                 list_add(stack, val);
                 free_glass_value(name_val);
-                break;
-            }
-
-            case CMD_EXECUTE_FUNC: {
-                if (check_stack(stack, "?", 1, ARG_FUNC)) {
-                    output_stack_trace_line(func_val, cmd);
-                    free_map(local_vars);
-                    return 1;
-                }
-                GlassValue *new_func = list_pop(stack);
-                int ret = execute_function(new_func, state);
-                free_glass_value(new_func);
-                if (ret != 0) {
-                    output_stack_trace_line(func_val, cmd);
-                    free_map(local_vars);
-                    exit_scope();
-                    return ret;
-                }
                 break;
             }
 
