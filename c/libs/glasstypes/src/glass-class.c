@@ -81,6 +81,7 @@ GlassClassBuilder *copy_class_builder(const GlassClassBuilder *builder) {
 void free_glass_class(GlassClass *gclass) {
     free_string(gclass->name);
     free_string(gclass->filename);
+    free_list(gclass->parents);
     free_map(gclass->funcs);
     free(gclass);
 }
