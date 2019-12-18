@@ -842,6 +842,8 @@ int execute_function(GlassValue *func_val, InterpreterState *state) {
                 GlassValue *new_func = new_func_value(obj_val->inst, fname_val->str);
                 list_add(stack, new_func);
                 free_glass_value(new_func);
+                free_glass_value(fname_val);
+                free_glass_value(oname_val);
                 break;
             }
 
@@ -876,6 +878,8 @@ int execute_function(GlassValue *func_val, InterpreterState *state) {
                 free_glass_value(new_func);
                 if (ret != 0) {
                     output_stack_trace_line(func_val, cmd);
+                    free_map(local_vars);
+                    exit_scope();
                     return ret;
                 }
                 break;
@@ -938,11 +942,14 @@ int execute_function(GlassValue *func_val, InterpreterState *state) {
                 if (ctor_ret != 0) {
                     output_stack_trace_line(func_val, cmd);
                     free_map(local_vars);
+                    exit_scope();
                     return 1;
                 }
                 GlassValue *inst_val = new_inst_value(new_inst);
                 set_var(oname_val->str, inst_val, globals, inst, local_vars);
                 free_glass_value(inst_val);
+                free_glass_value(cname_val);
+                free_glass_value(oname_val);
                 free_string(ctor_name);
                 break;
             }
