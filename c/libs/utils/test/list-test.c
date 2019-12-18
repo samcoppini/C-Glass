@@ -26,7 +26,10 @@ int main() {
     for (size_t i = 0; i < list_len(list); i++) {
         const String *str = list_get(list, i);
 
-        ASSERT_FALSE(strcmp(string_data(str), TEST_STRINGS[i]));
+        if (ASSERT_EQUAL(string_len(str), strlen(TEST_STRINGS[i]))) {
+            ASSERT_FALSE(memcmp(string_data(str), TEST_STRINGS[i], string_len(str)));
+        }
+
     }
 
     String *str = list_pop(list);
