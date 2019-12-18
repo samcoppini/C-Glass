@@ -1,0 +1,27 @@
+'
+    brainfuck interpreter
+
+    Give it a BF program as input ended with a semicolon
+    followed by the input for the BF program
+'
+
+{B[(c__)k<1>=j<1>=u<0>=][(af)/kkB!(_e)$(_e)*kv.?\k*][(ae)/jjB
+!(_e)$(_e)*jw.?\j*][pu*][wk1=,][vj1=,][qu1=,]}{C[(c__)aA!iI!o
+O!sS!r""(_f)ic.?=(_d)ie.?<0>ae.?=/(_d)(_f)*sa.?(_f)ic.?=(_d)i
+e.?<0>ae.?=(_g)(_d)*=/(_g)(_d)(_f)*";"se.?<0>ae.?=(_g)<0>=\\=
+tr*sl.?=b<0>=h$gB!][(ai)gp.?<1>as.?(_a)1<-1>ae.?=/(_a),<255>
+(_a)<0>=\gq.?][(ah)(_a)b*t*a(lt).?=/(_a)h(ag).?b0*<1>a0.?=
+(_a)b*t*a(lt).?=\][(ag)(_b)r*b*si.?=(_a)(_b)*"+"se.?=/(_a)h
+(ad).?^\(_a)(_b)*"-"se.?=/(_a)h(ai).?^\(_a)(_b)*">"se.?=/(_a)
+hy.?^\(_a)(_b)*"<"se.?=/(_a)hz.?^\(_a)(_b)*"["se.?=/(_a)h(ab)
+.?^\(_a)(_b)*"]"se.?=/(_a)h(aa).?^\(_a)(_b)*"."se.?=/(_a)hx.?
+^\(_a)(_b)*","se.?=/(_a)h(ac).?^\][(ad)gp.?<1>a0.?<256>a(mod)
+.?gq.?][(ac)ic.?(_h)ie.?=/(_h)<0>gq.?,^\s(sn).?gq.?][(ab)(_a)
+gp.?=/(_a)^\(_c)<1>=/(_c)b0*<1>a0.?=(_a)b*t*a(gt).?=/(_a)^\
+(_b)r*b*si.?=(_a)(_b)*"["se.?=/(_a)(_c)0*<1>a0.?=(_a)<0>=\
+(_a)(_b)*"]"se.?=/(_a)(_c)0*<1>as.?=(_a)<0>=\\][(aa)(_a)gp.?
+<0>ae.?=/(_a)^\(_c)<1>=/(_c)b0*<1>as.?=(_a)b*<0>a(le).?=
+/(_a)^\(_b)r*b*si.?=(_a)(_b)*"["se.?=/(_a)(_c)0*<1>as.?=(_a)
+<0>=\(_a)(_b)*"]"se.?=/(_a)(_c)0*<1>a0.?=(_a)<0>=\\][zg(af).
+?g1=,][yg(ae).?g1=,][xgp.?s(ns).?o0.?]}{M[m(_i)C!(_i)(ah).?]
+}
