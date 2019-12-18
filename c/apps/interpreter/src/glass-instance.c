@@ -49,6 +49,7 @@ void free_instances(void) {
 
     free_list(this_insts_list);
     free_list(local_vars_list);
+    free(inst_array);
 }
 
 void register_new_scope(const Map *local_vars, GlassInstance inst) {
