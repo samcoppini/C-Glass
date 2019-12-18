@@ -877,6 +877,7 @@ int execute_function(GlassValue *func_val, InterpreterState *state) {
                     fprintf(stderr, "Error! %s is not defined!\nStack trace:\n",
                             string_get_c_str(name_val->str));
                     output_stack_trace_line(func_val, cmd);
+                    free_glass_value(name_val);
                     free_map(local_vars);
                     return 1;
                 }
