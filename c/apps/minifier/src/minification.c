@@ -207,6 +207,7 @@ Map *get_reachable_names(const Map *classes) {
 
     free_string(main_class_name);
     free_string(main_func_name);
+    free_string(ctor_name);
     free_list(class_names);
     free_list(func_names);
 
