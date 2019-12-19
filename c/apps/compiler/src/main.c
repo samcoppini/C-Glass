@@ -19,6 +19,7 @@ void usage(const char *exe_name) {
 
 void free_options(Options *opts) {
     free_list(opts->files);
+    free_string(opts->out_name);
 }
 
 bool parse_command_line(Options *opts, int argc, char **argv) {
