@@ -61,8 +61,31 @@ void list_add(List *list, const void *val) {
     list->len++;
 }
 
+static void list_sort_helper(List *list, int (*cmp)(const void *, const void *), int lo, int hi) {
+    if (lo < hi) {
+        void *pivot = list->elements[hi];
+        int splitIdx = lo;
+
+        for (int i = lo; i < hi; i++) {
+            if (cmp(pivot, list->elements[i]) < 0) {
+                void *tmp = list->elements[splitIdx];
+                list->elements[splitIdx] = list->elements[i];
+                list->elements[i] = tmp;
+                splitIdx++;
+            }
+        }
+
+        void *tmp = list->elements[splitIdx];
+        list->elements[splitIdx] = pivot;
+        list->elements[hi] = tmp;
+
+        list_sort_helper(list, cmp, lo, splitIdx - 1);
+        list_sort_helper(list, cmp, splitIdx + 1, hi);
+    }
+}
+
 void list_sort(List *list, int (*cmp)(const void *, const void *)) {
-    qsort(list->elements, list->len, sizeof(void *), cmp);
+    list_sort_helper(list, cmp, 0, list->len - 1);
 }
 
 void *list_pop(List *list) {
