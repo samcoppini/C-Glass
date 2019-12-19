@@ -313,7 +313,11 @@ Map *reassign_names(const Map *name_counts) {
         free_string(reassigned_name);
     }
 
+    free_string(local_name);
+    free_string(classwide_name);
+    free_string(global_name);
     free_list(sorted_names);
+    free_list(names_list);
     free_set(fixed_names);
 
     return reassigned_names;

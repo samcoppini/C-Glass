@@ -62,5 +62,9 @@ int main(int argc, char **argv) {
         putchar(string_get(source, i));
     }
 
+    free_map(classes);
+    free_string(source);
+    free_options(&opts);
+
     return 0;
 }
