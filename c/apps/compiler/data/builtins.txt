@@ -209,7 +209,7 @@ void num_to_string() {
 char **arg_list;
 int arg_count;
 
-int cur_argument = 0;
+int cur_argument = 1;
 
 void argument_count() {
     stack_push(new_number_value(arg_count));
@@ -218,9 +218,16 @@ void argument_count() {
 void next_argument() {
     String *str = malloc(sizeof(String));
     str->ref_count = 0;
-    str->len = strlen(arg_list[cur_argument]);
-    str->buf = malloc(str->len);
-    memcpy(str->buf, arg_list[cur_argument], str->len);
+    if (cur_argument <= arg_count) {
+        str->len = strlen(arg_list[cur_argument]);
+        str->buf = malloc(str->len);
+        memcpy(str->buf, arg_list[cur_argument], str->len);
+    }
+    else {
+        str->len = 0;
+        str->buf = NULL;
+    }
+    stack_push(new_string_value(str));
     cur_argument++;
 }
 

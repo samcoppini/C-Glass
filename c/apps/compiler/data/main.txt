@@ -1,6 +1,6 @@
 int main(int argc, char **argv) {
     arg_list = argv;
-    arg_count = argc;
+    arg_count = argc - 1;
     
     init_instances();
     init_stack();
