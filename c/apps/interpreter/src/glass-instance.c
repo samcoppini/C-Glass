@@ -91,8 +91,10 @@ static void mark_globals_and_locals(void) {
 
     for (size_t i = 0; i < list_len(this_insts_list); i++) {
         size_t inst_index = * (size_t *) list_get(this_insts_list, i);
-        const Map *vars = inst_array[inst_index].vars;
-        mark_var_map_as_reachable(vars);
+
+        GlassInstImpl *inst = &inst_array[inst_index];
+        inst->ref_count = 1;
+        mark_var_map_as_reachable(inst->vars);
     }
 }
 
