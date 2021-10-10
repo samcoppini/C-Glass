@@ -1,5 +1,6 @@
 project('c-glass', 'c',
     version : '0.1',
+    license: 'BSL-1.0',
     default_options : [
         'c_std=c11',
         'warning_level=3',
